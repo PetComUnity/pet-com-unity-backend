@@ -20,8 +20,18 @@ const parsePort = (value: string | undefined): number => {
   return 5000;
 };
 
+if (!process.env.MONGODB_URI) {
+  throw new Error('MONGODB_URI is not defined in environment variables');
+}
+
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET is not defined in environment variables');
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parsePort(process.env.PORT),
   apiBasePath: normalizeApiBasePath(process.env.API_BASE_PATH),
+  mongodbUri: process.env.MONGODB_URI,
+  jwtSecret: process.env.JWT_SECRET,
 };
