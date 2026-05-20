@@ -9,6 +9,7 @@ async function startServer() {
     console.log(
       `Server is running on http://localhost:${env.port}${env.apiBasePath}`,
     );
+    console.log(`Swagger docs: http://localhost:${env.port}/api/docs`);
   });
 }
 
