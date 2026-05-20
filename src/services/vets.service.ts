@@ -8,7 +8,7 @@ class VetsService {
   }
 
   async getVetById(id: string): Promise<Vet> {
-    const vet = vetsRepository.getById(id);
+    const vet = await vetsRepository.getById(id);
 
     if (!vet) {
       throw createAppError('Vet not found', 404);

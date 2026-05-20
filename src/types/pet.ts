@@ -1,5 +1,5 @@
 export type PetGender = 'male' | 'female' | 'unknown';
-export type PetVerificationStatus = 'unverified' | 'pending' | 'verified';
+export type PetVerificationStatus = 'unverified' | 'verified';
 
 export interface Pet {
   id: string;

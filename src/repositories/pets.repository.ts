@@ -1,83 +1,47 @@
 import { randomUUID } from 'crypto';
-
+import { PetModel } from '../models/pet.model';
 import { CreatePetInput, Pet, UpdatePetInput } from '../types/pet';
 
-const initialTimestamp = new Date().toISOString();
-
-// TODO: Replace this in-memory repository with Prisma/PostgreSQL or MongoDB persistence later.
-let pets: Pet[] = [
-  {
-    id: 'pet-1',
-    name: 'Max',
-    species: 'Dog',
-    breed: 'Golden Retriever',
-    age: 4,
-    gender: 'male',
-    description: 'Friendly family dog.',
-    photoUrl: 'https://example.com/pets/max.jpg',
-    ownerId: 'owner-1',
-    status: 'owned',
-    createdAt: initialTimestamp,
-    updatedAt: initialTimestamp,
-  },
-];
+function toPet(doc: any): Pet {
+  const { _id, __v, ...rest } = doc;
+  return { ...rest, id: _id.toString() };
+}
 
 class PetsRepository {
-  getAll(): Pet[] {
-    return [...pets];
+  async getAll(): Promise<Pet[]> {
+    const pets = await PetModel.find().lean();
+    return pets.map(toPet);
   }
 
-  getById(id: string): Pet | undefined {
-    return pets.find((pet) => pet.id === id);
+  async getById(id: string): Promise<Pet | undefined> {
+    const pet = await PetModel.findById(id).lean();
+    if (!pet) return undefined;
+    return toPet(pet);
   }
 
-  create(payload: CreatePetInput): Pet {
-    const timestamp = new Date().toISOString();
-
-    const newPet: Pet = {
-      id: randomUUID(),
+  async create(payload: CreatePetInput): Promise<Pet> {
+    const pet = await PetModel.create({
       ...payload,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-
-    pets = [newPet, ...pets];
-
-    return newPet;
+      publicQrId: randomUUID(),
+      isLost: payload.isLost ?? false,
+      isAdoptable: payload.isAdoptable ?? false,
+      verificationStatus: 'unverified',
+    });
+    return toPet(pet.toObject());
   }
 
-  update(id: string, payload: UpdatePetInput): Pet | undefined {
-    const petIndex = pets.findIndex((pet) => pet.id === id);
-
-    if (petIndex === -1) {
-      return undefined;
-    }
-
-    const currentPet = pets[petIndex];
-
-    const updatedPet: Pet = {
-      ...currentPet,
-      ...payload,
-      id: currentPet.id,
-      createdAt: currentPet.createdAt,
-      updatedAt: new Date().toISOString(),
-    };
-
-    pets[petIndex] = updatedPet;
-
-    return updatedPet;
+  async update(id: string, payload: UpdatePetInput): Promise<Pet | undefined> {
+    const pet = await PetModel.findByIdAndUpdate(id, payload, {
+      new: true,
+    }).lean();
+    if (!pet) return undefined;
+    return toPet(pet);
   }
 
-  delete(id: string): Pet | undefined {
-    const petIndex = pets.findIndex((pet) => pet.id === id);
-
-    if (petIndex === -1) {
-      return undefined;
-    }
-
-    const [deletedPet] = pets.splice(petIndex, 1);
-
-    return deletedPet;
+  async delete(id: string): Promise<Pet | undefined> {
+    const pet = await PetModel.findByIdAndDelete(id).lean();
+    if (!pet) return undefined;
+    return toPet(pet);
   }
 }
 

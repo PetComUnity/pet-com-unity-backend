@@ -8,7 +8,7 @@ class SheltersService {
   }
 
   async getShelterById(id: string): Promise<Shelter> {
-    const shelter = sheltersRepository.getById(id);
+    const shelter = await sheltersRepository.getById(id);
 
     if (!shelter) {
       throw createAppError('Shelter not found', 404);

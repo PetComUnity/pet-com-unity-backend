@@ -8,7 +8,7 @@ class PetsService {
   }
 
   async getPetById(id: string): Promise<Pet> {
-    const pet = petsRepository.getById(id);
+    const pet = await petsRepository.getById(id);
 
     if (!pet) {
       throw createAppError('Pet not found', 404);
@@ -22,7 +22,7 @@ class PetsService {
   }
 
   async updatePet(id: string, payload: UpdatePetInput): Promise<Pet> {
-    const pet = petsRepository.update(id, payload);
+    const pet = await petsRepository.update(id, payload);
 
     if (!pet) {
       throw createAppError('Pet not found', 404);
@@ -32,7 +32,7 @@ class PetsService {
   }
 
   async deletePet(id: string): Promise<Pet> {
-    const pet = petsRepository.delete(id);
+    const pet = await petsRepository.delete(id);
 
     if (!pet) {
       throw createAppError('Pet not found', 404);
