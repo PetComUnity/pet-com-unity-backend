@@ -1,60 +1,79 @@
-import { randomUUID } from 'crypto';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { UserModel } from '../models/user.model';
+import { env } from '../config/env';
+import {
+  AuthResult,
+  LoginUserInput,
+  RegisterUserInput,
+  UserPublic,
+} from '../types/user';
+import { createAppError } from '../utils/api-response';
 
-import { AuthResult, LoginUserInput, RegisterUserInput, User } from '../types/user';
+function toUserPublic(doc: any): UserPublic {
+  const { _id, __v, passwordHash, ...rest } = doc;
+  return { ...rest, id: _id.toString() };
+}
+
+function generateToken(userId: string): string {
+  return jwt.sign({ userId }, env.jwtSecret, { expiresIn: '7d' });
+}
 
 class AuthService {
   async register(payload: RegisterUserInput): Promise<AuthResult> {
-    const timestamp = new Date().toISOString();
+    const existing = await UserModel.findOne({ email: payload.email }).lean();
 
-    const user: User = {
-      id: randomUUID(),
+    if (existing) {
+      throw createAppError('User with this email already exists', 409);
+    }
+
+    const passwordHash = await bcrypt.hash(payload.password, 10);
+
+    const user = await UserModel.create({
       name: payload.name,
       email: payload.email,
+      passwordHash,
       role: payload.role,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
+      phone: payload.phone,
+      city: payload.city,
+    });
 
-    // TODO: Save the user in a real database when Prisma/PostgreSQL or MongoDB is added.
-    // TODO: Hash the password and generate a real JWT token.
-    return {
-      user,
-      token: 'mock-token',
-    };
+    const userPublic = toUserPublic(user.toObject());
+    const token = generateToken(userPublic.id);
+
+    return { user: userPublic, token };
   }
 
   async login(payload: LoginUserInput): Promise<AuthResult> {
-    const timestamp = new Date().toISOString();
+    const user = await UserModel.findOne({ email: payload.email }).lean();
 
-    // TODO: Validate the user credentials against a real database.
-    // TODO: Replace this mock user with the authenticated database user.
-    const user: User = {
-      id: 'mock-user-1',
-      name: 'John Doe',
-      email: payload.email,
-      role: 'pet_owner',
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
+    if (!user) {
+      throw createAppError('Invalid email or password', 401);
+    }
 
-    // TODO: Generate a real JWT token after authentication is implemented.
-    return {
-      user,
-      token: 'mock-token',
-    };
+    const isPasswordValid = await bcrypt.compare(
+      payload.password,
+      user.passwordHash,
+    );
+
+    if (!isPasswordValid) {
+      throw createAppError('Invalid email or password', 401);
+    }
+
+    const userPublic = toUserPublic(user);
+    const token = generateToken(userPublic.id);
+
+    return { user: userPublic, token };
   }
 
-  async getCurrentUser(): Promise<User> {
-    // TODO: Read the authenticated user from a JWT/session once auth is implemented.
-    // TODO: Fetch the current user from the database instead of returning mock data.
-    return {
-      id: 'mock-user-1',
-      name: 'John Doe',
-      email: 'john@example.com',
-      role: 'pet_owner',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  async getCurrentUser(userId: string): Promise<UserPublic> {
+    const user = await UserModel.findById(userId).lean();
+
+    if (!user) {
+      throw createAppError('User not found', 404);
+    }
+
+    return toUserPublic(user);
   }
 }
 
