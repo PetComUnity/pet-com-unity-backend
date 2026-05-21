@@ -1,45 +1,41 @@
-import { randomUUID } from 'crypto';
+import { ShelterModel } from '../models/shelter.model';
+import {
+  CreateShelterInput,
+  Shelter,
+  UpdateShelterInput,
+} from '../types/shelter';
 
-import { CreateShelterInput, Shelter } from '../types/shelter';
-
-const initialTimestamp = new Date().toISOString();
-
-// TODO: Replace this in-memory repository with Prisma/PostgreSQL or MongoDB persistence later.
-let shelters: Shelter[] = [
-  {
-    id: 'shelter-1',
-    name: 'Happy Paws Shelter',
-    email: 'contact@happypaws.org',
-    phone: '+38970111222',
-    address: '12 Rescue Street, Skopje',
-    description: 'Local shelter caring for abandoned pets.',
-    createdAt: initialTimestamp,
-    updatedAt: initialTimestamp,
-  },
-];
+function toShelter(doc: any): Shelter {
+  const { _id, __v, ...rest } = doc;
+  return { ...rest, id: _id.toString() };
+}
 
 class SheltersRepository {
-  getAll(): Shelter[] {
-    return [...shelters];
+  async getAll(): Promise<Shelter[]> {
+    const shelters = await ShelterModel.find().lean();
+    return shelters.map(toShelter);
   }
 
-  getById(id: string): Shelter | undefined {
-    return shelters.find((shelter) => shelter.id === id);
+  async getById(id: string): Promise<Shelter | undefined> {
+    const shelter = await ShelterModel.findById(id).lean();
+    if (!shelter) return undefined;
+    return toShelter(shelter);
   }
 
-  create(payload: CreateShelterInput): Shelter {
-    const timestamp = new Date().toISOString();
+  async create(payload: CreateShelterInput): Promise<Shelter> {
+    const shelter = await ShelterModel.create(payload);
+    return toShelter(shelter.toObject());
+  }
 
-    const newShelter: Shelter = {
-      id: randomUUID(),
-      ...payload,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-
-    shelters = [newShelter, ...shelters];
-
-    return newShelter;
+  async update(
+    id: string,
+    payload: UpdateShelterInput,
+  ): Promise<Shelter | undefined> {
+    const shelter = await ShelterModel.findByIdAndUpdate(id, payload, {
+      new: true,
+    }).lean();
+    if (!shelter) return undefined;
+    return toShelter(shelter);
   }
 }
 

@@ -1,46 +1,34 @@
-import { randomUUID } from 'crypto';
+import { VetModel } from '../models/vet.model';
+import { CreateVetInput, UpdateVetInput, Vet } from '../types/vet';
 
-import { CreateVetInput, Vet } from '../types/vet';
-
-const initialTimestamp = new Date().toISOString();
-
-// TODO: Replace this in-memory repository with Prisma/PostgreSQL or MongoDB persistence later.
-let vets: Vet[] = [
-  {
-    id: 'vet-1',
-    name: 'Dr. Elena Petrova',
-    clinicName: 'Pet Care Clinic',
-    email: 'elena@petcareclinic.com',
-    phone: '+38970222333',
-    address: '5 Health Avenue, Skopje',
-    specialization: 'Small animal medicine',
-    createdAt: initialTimestamp,
-    updatedAt: initialTimestamp,
-  },
-];
+function toVet(doc: any): Vet {
+  const { _id, __v, ...rest } = doc;
+  return { ...rest, id: _id.toString() };
+}
 
 class VetsRepository {
-  getAll(): Vet[] {
-    return [...vets];
+  async getAll(): Promise<Vet[]> {
+    const vets = await VetModel.find().lean();
+    return vets.map(toVet);
   }
 
-  getById(id: string): Vet | undefined {
-    return vets.find((vet) => vet.id === id);
+  async getById(id: string): Promise<Vet | undefined> {
+    const vet = await VetModel.findById(id).lean();
+    if (!vet) return undefined;
+    return toVet(vet);
   }
 
-  create(payload: CreateVetInput): Vet {
-    const timestamp = new Date().toISOString();
+  async create(payload: CreateVetInput): Promise<Vet> {
+    const vet = await VetModel.create(payload);
+    return toVet(vet.toObject());
+  }
 
-    const newVet: Vet = {
-      id: randomUUID(),
-      ...payload,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-
-    vets = [newVet, ...vets];
-
-    return newVet;
+  async update(id: string, payload: UpdateVetInput): Promise<Vet | undefined> {
+    const vet = await VetModel.findByIdAndUpdate(id, payload, {
+      new: true,
+    }).lean();
+    if (!vet) return undefined;
+    return toVet(vet);
   }
 }
 

@@ -1,37 +1,19 @@
 import { Router } from 'express';
-
-import { getCurrentUser, login, register } from '../controllers/auth.controller';
-import { validateBody } from '../middlewares/validate.middleware';
-import { UserRole } from '../types/user';
+import {
+  getCurrentUser,
+  login,
+  logout,
+  register,
+} from '../controllers/auth.controller';
+import { authMiddleware } from '../middlewares/auth.middleware';
+import { validateSchema } from '../middlewares/validate-schema.middleware';
+import { loginSchema, registerSchema } from '../validation/auth.schemas';
 
 const router = Router();
 
-const userRoles: UserRole[] = ['pet_owner', 'vet', 'shelter', 'admin'];
-
-router.post(
-  '/register',
-  validateBody([
-    { field: 'name', message: 'Name is required' },
-    { field: 'email', message: 'A valid email is required', validate: (value) => typeof value === 'string' && value.includes('@') },
-    { field: 'password', message: 'Password must be at least 6 characters long', validate: (value) => typeof value === 'string' && value.length >= 6 },
-    {
-      field: 'role',
-      message: 'Role must be one of: pet_owner, vet, shelter, admin',
-      validate: (value) => typeof value === 'string' && userRoles.includes(value as UserRole),
-    },
-  ]),
-  register,
-);
-
-router.post(
-  '/login',
-  validateBody([
-    { field: 'email', message: 'A valid email is required', validate: (value) => typeof value === 'string' && value.includes('@') },
-    { field: 'password', message: 'Password is required' },
-  ]),
-  login,
-);
-
-router.get('/me', getCurrentUser);
+router.post('/register', validateSchema(registerSchema), register);
+router.post('/login', validateSchema(loginSchema), login);
+router.get('/me', authMiddleware, getCurrentUser);
+router.post('/logout', authMiddleware, logout);
 
 export default router;

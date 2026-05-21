@@ -1,12 +1,15 @@
-export type UserRole = 'pet_owner' | 'vet' | 'shelter' | 'admin';
+export type UserRole = 'owner' | 'vet' | 'shelter' | 'admin';
 
 export interface User {
   id: string;
   name: string;
   email: string;
+  passwordHash: string;
   role: UserRole;
-  createdAt: string;
-  updatedAt: string;
+  phone?: string;
+  city?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface RegisterUserInput {
@@ -14,6 +17,8 @@ export interface RegisterUserInput {
   email: string;
   password: string;
   role: UserRole;
+  phone?: string;
+  city?: string;
 }
 
 export interface LoginUserInput {
@@ -21,7 +26,17 @@ export interface LoginUserInput {
   password: string;
 }
 
+export interface UserPublic {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  phone?: string;
+  city?: string;
+  createdAt: Date;
+}
+
 export interface AuthResult {
-  user: User;
+  user: UserPublic;
   token: string;
 }
