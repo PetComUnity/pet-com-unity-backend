@@ -9,7 +9,7 @@ const options: swaggerJsdoc.Options = {
       description: 'Backend API для платформи цифрової ідентифікації тварин',
     },
     servers: [
-      { url: 'http://localhost:5001/api', description: 'Local development' },
+      { url: 'http://localhost:5000/api', description: 'Local development' },
     ],
     components: {
       securitySchemes: {
@@ -43,6 +43,7 @@ const options: swaggerJsdoc.Options = {
             name: { type: 'string', example: 'Барсик' },
             species: { type: 'string', example: 'Cat' },
             breed: { type: 'string', nullable: true },
+            location: { type: 'string', example: 'Kyiv', nullable: true },
             gender: {
               type: 'string',
               enum: ['male', 'female', 'unknown'],
@@ -303,7 +304,16 @@ const options: swaggerJsdoc.Options = {
       '/pets': {
         get: {
           tags: ['Pets'],
-          summary: 'Get all pets',
+          summary: 'Get pets',
+          parameters: [
+            {
+              name: 'isAdoptable',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by adoption availability. Use true to list pets available for adoption.',
+              schema: { type: 'boolean' },
+            },
+          ],
           responses: {
             200: {
               description: 'Pets fetched successfully',
@@ -339,6 +349,7 @@ const options: swaggerJsdoc.Options = {
                     name: { type: 'string', example: 'Барсик' },
                     species: { type: 'string', example: 'Cat' },
                     breed: { type: 'string', example: 'Siamese' },
+                    location: { type: 'string', example: 'Kyiv' },
                     gender: {
                       type: 'string',
                       enum: ['male', 'female', 'unknown'],
@@ -435,6 +446,7 @@ const options: swaggerJsdoc.Options = {
                     name: { type: 'string' },
                     species: { type: 'string' },
                     breed: { type: 'string' },
+                    location: { type: 'string' },
                     gender: {
                       type: 'string',
                       enum: ['male', 'female', 'unknown'],

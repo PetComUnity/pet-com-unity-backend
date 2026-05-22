@@ -1,10 +1,10 @@
 import { petsRepository } from '../repositories/pets.repository';
-import { CreatePetInput, Pet, UpdatePetInput } from '../types/pet';
+import { CreatePetInput, Pet, PetFilters, UpdatePetInput } from '../types/pet';
 import { createAppError } from '../utils/api-response';
 
 class PetsService {
-  async getAllPets(): Promise<Pet[]> {
-    return petsRepository.getAll();
+  async getAllPets(filters: PetFilters = {}): Promise<Pet[]> {
+    return petsRepository.getAll(filters);
   }
 
   async getPetById(id: string): Promise<Pet> {

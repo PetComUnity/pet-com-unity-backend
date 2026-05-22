@@ -8,6 +8,7 @@ export interface IPet extends Document {
   name: string;
   species: string;
   breed?: string;
+  location?: string;
   gender?: PetGender;
   birthDate?: string;
   color?: string;
@@ -28,6 +29,7 @@ const PetSchema = new Schema<IPet>(
     name: { type: String, required: true },
     species: { type: String, required: true },
     breed: { type: String },
+    location: { type: String },
     gender: {
       type: String,
       enum: ['male', 'female', 'unknown'],

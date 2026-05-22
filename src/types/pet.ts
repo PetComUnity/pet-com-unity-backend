@@ -7,6 +7,7 @@ export interface Pet {
   name: string;
   species: string;
   breed?: string;
+  location?: string;
   gender?: PetGender;
   birthDate?: Date;
   color?: string;
@@ -28,6 +29,7 @@ export interface CreatePetInput {
   name: string;
   species: string;
   breed?: string;
+  location?: string;
   gender?: PetGender;
   birthDate?: string;
   color?: string;
@@ -35,6 +37,10 @@ export interface CreatePetInput {
   imageUrl?: string;
   microchipId?: string;
   isLost?: boolean;
+  isAdoptable?: boolean;
+}
+
+export interface PetFilters {
   isAdoptable?: boolean;
 }
 

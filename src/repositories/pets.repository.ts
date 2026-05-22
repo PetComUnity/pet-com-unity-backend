@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { PetModel } from '../models/pet.model';
-import { CreatePetInput, Pet, UpdatePetInput } from '../types/pet';
+import { CreatePetInput, Pet, PetFilters, UpdatePetInput } from '../types/pet';
 
 function toPet(doc: any): Pet {
   const { _id, __v, ...rest } = doc;
@@ -8,8 +8,14 @@ function toPet(doc: any): Pet {
 }
 
 class PetsRepository {
-  async getAll(): Promise<Pet[]> {
-    const pets = await PetModel.find().lean();
+  async getAll(filters: PetFilters = {}): Promise<Pet[]> {
+    const query: { isAdoptable?: boolean } = {};
+
+    if (filters.isAdoptable !== undefined) {
+      query.isAdoptable = filters.isAdoptable;
+    }
+
+    const pets = await PetModel.find(query).lean();
     return pets.map(toPet);
   }
 

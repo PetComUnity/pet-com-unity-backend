@@ -32,6 +32,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parsePort(process.env.PORT),
   apiBasePath: normalizeApiBasePath(process.env.API_BASE_PATH),
+  frontendOrigin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
   mongodbUri: process.env.MONGODB_URI,
   jwtSecret: process.env.JWT_SECRET,
 };
