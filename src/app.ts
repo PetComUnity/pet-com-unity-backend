@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env';
 import { swaggerSpec } from './docs/swagger';
@@ -7,6 +8,15 @@ import { notFoundMiddleware } from './middlewares/not-found.middleware';
 import routes from './routes';
 
 const app = express();
+
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') ?? [
+      'http://localhost:3000',
+    ],
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
