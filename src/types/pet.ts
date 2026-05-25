@@ -24,6 +24,20 @@ export interface Pet {
   updatedAt: Date;
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedPets {
+  items: Pet[];
+  pagination: PaginationMeta;
+}
+
 export interface CreatePetInput {
   ownerId: string;
   name: string;
@@ -42,6 +56,8 @@ export interface CreatePetInput {
 
 export interface PetFilters {
   isAdoptable?: boolean;
+  page?: number;
+  limit?: number;
 }
 
 export type UpdatePetInput = Partial<Omit<CreatePetInput, 'ownerId'>>;

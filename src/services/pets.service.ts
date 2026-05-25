@@ -1,9 +1,9 @@
 import { petsRepository } from '../repositories/pets.repository';
-import { CreatePetInput, Pet, PetFilters, UpdatePetInput } from '../types/pet';
+import { CreatePetInput, PaginatedPets, Pet, PetFilters, UpdatePetInput } from '../types/pet';
 import { createAppError } from '../utils/api-response';
 
 class PetsService {
-  async getAllPets(filters: PetFilters = {}): Promise<Pet[]> {
+  async getAllPets(filters: PetFilters = {}): Promise<PaginatedPets> {
     return petsRepository.getAll(filters);
   }
 

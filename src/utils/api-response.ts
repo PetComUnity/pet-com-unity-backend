@@ -2,19 +2,25 @@ import { Response } from 'express';
 
 import { ApiResponse, AppError } from '../types/api-response';
 
-export const buildSuccessResponse = <T>(message: string, data?: T): ApiResponse<T> => {
-  if (data === undefined) {
-    return {
-      success: true,
-      message,
-    };
-  }
-
-  return {
+export const buildSuccessResponse = <T, TMeta = unknown>(
+  message: string,
+  data?: T,
+  meta?: TMeta,
+): ApiResponse<T, TMeta> => {
+  const response: ApiResponse<T, TMeta> = {
     success: true,
     message,
-    data,
   };
+
+  if (data !== undefined) {
+    response.data = data;
+  }
+
+  if (meta !== undefined) {
+    response.meta = meta;
+  }
+
+  return response;
 };
 
 export const buildErrorResponse = (message: string): ApiResponse => {
@@ -24,13 +30,14 @@ export const buildErrorResponse = (message: string): ApiResponse => {
   };
 };
 
-export const sendSuccess = <T>(
+export const sendSuccess = <T, TMeta = unknown>(
   res: Response,
   statusCode: number,
   message: string,
   data?: T,
-): Response<ApiResponse<T>> => {
-  return res.status(statusCode).json(buildSuccessResponse(message, data));
+  meta?: TMeta,
+): Response<ApiResponse<T, TMeta>> => {
+  return res.status(statusCode).json(buildSuccessResponse(message, data, meta));
 };
 
 export const createAppError = (message: string, statusCode = 500): AppError => {

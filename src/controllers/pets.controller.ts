@@ -12,7 +12,7 @@ export const getPets = asyncHandler(async (req, res) => {
   }
 
   const pets = await petsService.getAllPets(result.data);
-  sendSuccess(res, 200, 'Pets fetched successfully', pets);
+  sendSuccess(res, 200, 'Pets fetched successfully', pets.items, pets.pagination);
 });
 
 export const getPetById = asyncHandler(async (req, res) => {

@@ -65,6 +65,17 @@ const options: swaggerJsdoc.Options = {
             updatedAt: { type: 'string', format: 'date-time' },
           },
         },
+        PaginationMeta: {
+          type: 'object',
+          properties: {
+            page: { type: 'integer', example: 1 },
+            limit: { type: 'integer', example: 10 },
+            total: { type: 'integer', example: 42 },
+            totalPages: { type: 'integer', example: 5 },
+            hasNextPage: { type: 'boolean', example: true },
+            hasPreviousPage: { type: 'boolean', example: false },
+          },
+        },
         Shelter: {
           type: 'object',
           properties: {
@@ -313,6 +324,20 @@ const options: swaggerJsdoc.Options = {
               description: 'Filter pets by adoption availability. Use true to list pets available for adoption.',
               schema: { type: 'boolean' },
             },
+            {
+              name: 'page',
+              in: 'query',
+              required: false,
+              description: 'Page number for paginated pet results.',
+              schema: { type: 'integer', minimum: 1, default: 1 },
+            },
+            {
+              name: 'limit',
+              in: 'query',
+              required: false,
+              description: 'Number of pets to return per page.',
+              schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+            },
           ],
           responses: {
             200: {
@@ -323,10 +348,15 @@ const options: swaggerJsdoc.Options = {
                     type: 'object',
                     properties: {
                       success: { type: 'boolean', example: true },
+                      message: {
+                        type: 'string',
+                        example: 'Pets fetched successfully',
+                      },
                       data: {
                         type: 'array',
                         items: { $ref: '#/components/schemas/Pet' },
                       },
+                      meta: { $ref: '#/components/schemas/PaginationMeta' },
                     },
                   },
                 },

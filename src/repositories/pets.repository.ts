@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { PetModel } from '../models/pet.model';
-import { CreatePetInput, Pet, PetFilters, UpdatePetInput } from '../types/pet';
+import { CreatePetInput, PaginatedPets, Pet, PetFilters, UpdatePetInput } from '../types/pet';
 
 function toPet(doc: any): Pet {
   const { _id, __v, ...rest } = doc;
@@ -8,15 +8,32 @@ function toPet(doc: any): Pet {
 }
 
 class PetsRepository {
-  async getAll(filters: PetFilters = {}): Promise<Pet[]> {
+  async getAll(filters: PetFilters = {}): Promise<PaginatedPets> {
     const query: { isAdoptable?: boolean } = {};
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 9;
+    const skip = (page - 1) * limit;
 
     if (filters.isAdoptable !== undefined) {
       query.isAdoptable = filters.isAdoptable;
     }
 
-    const pets = await PetModel.find(query).lean();
-    return pets.map(toPet);
+    const [pets, total] = await Promise.all([
+      PetModel.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      PetModel.countDocuments(query),
+    ]);
+
+    return {
+      items: pets.map(toPet),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async getById(id: string): Promise<Pet | undefined> {
