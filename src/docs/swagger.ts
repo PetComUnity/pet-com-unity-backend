@@ -43,6 +43,7 @@ const options: swaggerJsdoc.Options = {
             name: { type: 'string', example: 'Барсик' },
             species: { type: 'string', example: 'Cat' },
             breed: { type: 'string', nullable: true },
+            weight: { type: 'number', example: 4.2, nullable: true },
             location: { type: 'string', example: 'Kyiv', nullable: true },
             gender: {
               type: 'string',
@@ -379,6 +380,7 @@ const options: swaggerJsdoc.Options = {
                     name: { type: 'string', example: 'Барсик' },
                     species: { type: 'string', example: 'Cat' },
                     breed: { type: 'string', example: 'Siamese' },
+                    weight: { type: 'number', example: 4.2 },
                     location: { type: 'string', example: 'Kyiv' },
                     gender: {
                       type: 'string',
@@ -476,6 +478,7 @@ const options: swaggerJsdoc.Options = {
                     name: { type: 'string' },
                     species: { type: 'string' },
                     breed: { type: 'string' },
+                    weight: { type: 'number' },
                     location: { type: 'string' },
                     gender: {
                       type: 'string',

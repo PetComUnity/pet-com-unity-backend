@@ -4,6 +4,7 @@ export const createPetSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
   species: z.string().min(1, 'Species is required'),
   breed: z.string().optional(),
+  weight: z.number().nonnegative('Weight cannot be negative').optional(),
   location: z.string().optional(),
   gender: z.enum(['male', 'female', 'unknown']).optional(),
   birthDate: z.string().optional(),

@@ -7,6 +7,7 @@ export interface Pet {
   name: string;
   species: string;
   breed?: string;
+  weight?: number;
   location?: string;
   gender?: PetGender;
   birthDate?: Date;
@@ -43,6 +44,7 @@ export interface CreatePetInput {
   name: string;
   species: string;
   breed?: string;
+  weight?: number;
   location?: string;
   gender?: PetGender;
   birthDate?: string;
