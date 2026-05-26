@@ -326,6 +326,30 @@ const options: swaggerJsdoc.Options = {
               schema: { type: 'boolean' },
             },
             {
+              name: 'size',
+              in: 'query',
+              required: false,
+              description: 'Filter by pet size derived from weight in kilograms: S = 0-9.99 kg, M = 10-24.99 kg, L = 25+ kg.',
+              schema: {
+                type: 'string',
+                enum: ['S', 'M', 'L'],
+              },
+            },
+            {
+              name: 'location',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by location using a case-insensitive partial match.',
+              schema: { type: 'string' },
+            },
+            {
+              name: 'species',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by species using a case-insensitive exact match.',
+              schema: { type: 'string' },
+            },
+            {
               name: 'page',
               in: 'query',
               required: false,

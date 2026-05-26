@@ -1,5 +1,6 @@
 export type PetGender = 'male' | 'female' | 'unknown';
 export type PetVerificationStatus = 'unverified' | 'verified';
+export type PetSize = 'S' | 'M' | 'L';
 
 export interface Pet {
   id: string;
@@ -58,6 +59,9 @@ export interface CreatePetInput {
 
 export interface PetFilters {
   isAdoptable?: boolean;
+  size?: PetSize;
+  location?: string;
+  species?: string;
   page?: number;
   limit?: number;
 }

@@ -1,21 +1,48 @@
 import { randomUUID } from 'crypto';
 import { PetModel } from '../models/pet.model';
-import { CreatePetInput, PaginatedPets, Pet, PetFilters, UpdatePetInput } from '../types/pet';
+import { CreatePetInput, PaginatedPets, Pet, PetFilters, PetSize, UpdatePetInput } from '../types/pet';
 
 function toPet(doc: any): Pet {
   const { _id, __v, ...rest } = doc;
   return { ...rest, id: _id.toString() };
 }
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getWeightRange(size: PetSize): { $gte: number; $lt?: number } {
+  switch (size) {
+    case 'S':
+      return { $gte: 0, $lt: 10 };
+    case 'M':
+      return { $gte: 10, $lt: 25 };
+    case 'L':
+      return { $gte: 25 };
+  }
+}
+
 class PetsRepository {
   async getAll(filters: PetFilters = {}): Promise<PaginatedPets> {
-    const query: { isAdoptable?: boolean } = {};
+    const query: Record<string, unknown> = {};
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 9;
     const skip = (page - 1) * limit;
 
     if (filters.isAdoptable !== undefined) {
       query.isAdoptable = filters.isAdoptable;
+    }
+
+    if (filters.size) {
+      query.weight = getWeightRange(filters.size);
+    }
+
+    if (filters.location) {
+      query.location = { $regex: escapeRegex(filters.location), $options: 'i' };
+    }
+
+    if (filters.species) {
+      query.species = { $regex: `^${escapeRegex(filters.species)}$`, $options: 'i' };
     }
 
     const [pets, total] = await Promise.all([

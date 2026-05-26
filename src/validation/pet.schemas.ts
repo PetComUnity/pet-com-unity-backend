@@ -23,6 +23,9 @@ export const getPetsQuerySchema = z.object({
     .enum(['true', 'false'])
     .transform((value) => value === 'true')
     .optional(),
+  size: z.enum(['S', 'M', 'L']).optional(),
+  location: z.string().trim().min(1, 'Location cannot be empty').optional(),
+  species: z.string().trim().min(1, 'Species cannot be empty').optional(),
   page: z.coerce.number().int().min(1, 'Page must be at least 1').default(1),
   limit: z.coerce.number().int().min(1, 'Limit must be at least 1').max(100, 'Limit cannot exceed 100').default(10),
 });
