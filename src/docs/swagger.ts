@@ -9,7 +9,7 @@ const options: swaggerJsdoc.Options = {
       description: 'Backend API для платформи цифрової ідентифікації тварин',
     },
     servers: [
-      { url: 'http://localhost:5001/api', description: 'Local development' },
+      { url: 'http://localhost:5000/api', description: 'Local development' },
     ],
     components: {
       securitySchemes: {
@@ -43,6 +43,8 @@ const options: swaggerJsdoc.Options = {
             name: { type: 'string', example: 'Барсик' },
             species: { type: 'string', example: 'Cat' },
             breed: { type: 'string', nullable: true },
+            weight: { type: 'number', example: 4.2, nullable: true },
+            location: { type: 'string', example: 'Kyiv', nullable: true },
             gender: {
               type: 'string',
               enum: ['male', 'female', 'unknown'],
@@ -62,6 +64,17 @@ const options: swaggerJsdoc.Options = {
             publicQrId: { type: 'string' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        PaginationMeta: {
+          type: 'object',
+          properties: {
+            page: { type: 'integer', example: 1 },
+            limit: { type: 'integer', example: 10 },
+            total: { type: 'integer', example: 42 },
+            totalPages: { type: 'integer', example: 5 },
+            hasNextPage: { type: 'boolean', example: true },
+            hasPreviousPage: { type: 'boolean', example: false },
           },
         },
         Shelter: {
@@ -303,7 +316,54 @@ const options: swaggerJsdoc.Options = {
       '/pets': {
         get: {
           tags: ['Pets'],
-          summary: 'Get all pets',
+          summary: 'Get pets',
+          parameters: [
+            {
+              name: 'isAdoptable',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by adoption availability. Use true to list pets available for adoption.',
+              schema: { type: 'boolean' },
+            },
+            {
+              name: 'size',
+              in: 'query',
+              required: false,
+              description: 'Filter by pet size derived from weight in kilograms: S = 0-9.99 kg, M = 10-24.99 kg, L = 25+ kg.',
+              schema: {
+                type: 'string',
+                enum: ['S', 'M', 'L'],
+              },
+            },
+            {
+              name: 'location',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by location using a case-insensitive partial match.',
+              schema: { type: 'string' },
+            },
+            {
+              name: 'species',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by species using a case-insensitive exact match.',
+              schema: { type: 'string' },
+            },
+            {
+              name: 'page',
+              in: 'query',
+              required: false,
+              description: 'Page number for paginated pet results.',
+              schema: { type: 'integer', minimum: 1, default: 1 },
+            },
+            {
+              name: 'limit',
+              in: 'query',
+              required: false,
+              description: 'Number of pets to return per page.',
+              schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+            },
+          ],
           responses: {
             200: {
               description: 'Pets fetched successfully',
@@ -313,10 +373,15 @@ const options: swaggerJsdoc.Options = {
                     type: 'object',
                     properties: {
                       success: { type: 'boolean', example: true },
+                      message: {
+                        type: 'string',
+                        example: 'Pets fetched successfully',
+                      },
                       data: {
                         type: 'array',
                         items: { $ref: '#/components/schemas/Pet' },
                       },
+                      meta: { $ref: '#/components/schemas/PaginationMeta' },
                     },
                   },
                 },
@@ -339,6 +404,8 @@ const options: swaggerJsdoc.Options = {
                     name: { type: 'string', example: 'Барсик' },
                     species: { type: 'string', example: 'Cat' },
                     breed: { type: 'string', example: 'Siamese' },
+                    weight: { type: 'number', example: 4.2 },
+                    location: { type: 'string', example: 'Kyiv' },
                     gender: {
                       type: 'string',
                       enum: ['male', 'female', 'unknown'],
@@ -435,6 +502,8 @@ const options: swaggerJsdoc.Options = {
                     name: { type: 'string' },
                     species: { type: 'string' },
                     breed: { type: 'string' },
+                    weight: { type: 'number' },
+                    location: { type: 'string' },
                     gender: {
                       type: 'string',
                       enum: ['male', 'female', 'unknown'],

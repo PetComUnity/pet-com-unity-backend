@@ -1,11 +1,18 @@
 import { asyncHandler } from '../utils/async-handler';
-import { sendSuccess } from '../utils/api-response';
+import { createAppError, sendSuccess } from '../utils/api-response';
 import { petsService } from '../services/pets.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { getPetsQuerySchema } from '../validation/pet.schemas';
 
-export const getPets = asyncHandler(async (_req, res) => {
-  const pets = await petsService.getAllPets();
-  sendSuccess(res, 200, 'Pets fetched successfully', pets);
+export const getPets = asyncHandler(async (req, res) => {
+  const result = getPetsQuerySchema.safeParse(req.query);
+
+  if (!result.success) {
+    throw createAppError(result.error.issues[0]?.message ?? 'Invalid query parameters', 400);
+  }
+
+  const pets = await petsService.getAllPets(result.data);
+  sendSuccess(res, 200, 'Pets fetched successfully', pets.items, pets.pagination);
 });
 
 export const getPetById = asyncHandler(async (req, res) => {
