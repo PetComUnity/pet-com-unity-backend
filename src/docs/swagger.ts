@@ -313,6 +313,92 @@ const options: swaggerJsdoc.Options = {
           },
         },
       },
+      '/me/pets': {
+        get: {
+          tags: ['Pets'],
+          summary: 'Get current user pets',
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: 'isAdoptable',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by adoption availability.',
+              schema: { type: 'boolean' },
+            },
+            {
+              name: 'size',
+              in: 'query',
+              required: false,
+              description: 'Filter by pet size derived from weight in kilograms: S = 0-9.99 kg, M = 10-24.99 kg, L = 25+ kg.',
+              schema: {
+                type: 'string',
+                enum: ['S', 'M', 'L'],
+              },
+            },
+            {
+              name: 'location',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by location using a case-insensitive partial match.',
+              schema: { type: 'string' },
+            },
+            {
+              name: 'species',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by species using a case-insensitive exact match.',
+              schema: { type: 'string' },
+            },
+            {
+              name: 'page',
+              in: 'query',
+              required: false,
+              description: 'Page number for paginated pet results.',
+              schema: { type: 'integer', minimum: 1, default: 1 },
+            },
+            {
+              name: 'limit',
+              in: 'query',
+              required: false,
+              description: 'Number of pets to return per page.',
+              schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'My pets fetched successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: {
+                        type: 'string',
+                        example: 'My pets fetched successfully',
+                      },
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/Pet' },
+                      },
+                      meta: { $ref: '#/components/schemas/PaginationMeta' },
+                    },
+                  },
+                },
+              },
+            },
+            401: {
+              description: 'Unauthorized',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+          },
+        },
+      },
       '/pets': {
         get: {
           tags: ['Pets'],

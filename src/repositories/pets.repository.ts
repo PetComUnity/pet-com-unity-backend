@@ -22,29 +22,55 @@ function getWeightRange(size: PetSize): { $gte: number; $lt?: number } {
   }
 }
 
+function buildPetQuery(filters: PetFilters = {}, ownerId?: string): Record<string, unknown> {
+  const query: Record<string, unknown> = {};
+
+  if (ownerId) {
+    query.ownerId = ownerId;
+  }
+
+  if (filters.isAdoptable !== undefined) {
+    query.isAdoptable = filters.isAdoptable;
+  }
+
+  if (filters.size) {
+    query.weight = getWeightRange(filters.size);
+  }
+
+  if (filters.location) {
+    query.location = { $regex: escapeRegex(filters.location), $options: 'i' };
+  }
+
+  if (filters.species) {
+    query.species = { $regex: `^${escapeRegex(filters.species)}$`, $options: 'i' };
+  }
+
+  return query;
+}
+
 class PetsRepository {
   async getAll(filters: PetFilters = {}): Promise<PaginatedPets> {
-    const query: Record<string, unknown> = {};
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 9;
+    const query = buildPetQuery(filters);
+
+    return this.getPaginatedPets(query, page, limit);
+  }
+
+  async getByOwnerId(ownerId: string, filters: PetFilters = {}): Promise<PaginatedPets> {
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 9;
+    const query = buildPetQuery(filters, ownerId);
+
+    return this.getPaginatedPets(query, page, limit);
+  }
+
+  private async getPaginatedPets(
+    query: Record<string, unknown>,
+    page: number,
+    limit: number,
+  ): Promise<PaginatedPets> {
     const skip = (page - 1) * limit;
-
-    if (filters.isAdoptable !== undefined) {
-      query.isAdoptable = filters.isAdoptable;
-    }
-
-    if (filters.size) {
-      query.weight = getWeightRange(filters.size);
-    }
-
-    if (filters.location) {
-      query.location = { $regex: escapeRegex(filters.location), $options: 'i' };
-    }
-
-    if (filters.species) {
-      query.species = { $regex: `^${escapeRegex(filters.species)}$`, $options: 'i' };
-    }
-
     const [pets, total] = await Promise.all([
       PetModel.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       PetModel.countDocuments(query),
