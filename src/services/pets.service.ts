@@ -7,6 +7,10 @@ class PetsService {
     return petsRepository.getAll(filters);
   }
 
+  async getMyPets(ownerId: string, filters: PetFilters = {}): Promise<PaginatedPets> {
+    return petsRepository.getByOwnerId(ownerId, filters);
+  }
+
   async getPetById(id: string): Promise<Pet> {
     const pet = await petsRepository.getById(id);
 
