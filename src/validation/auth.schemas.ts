@@ -31,5 +31,18 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+export const updateCurrentUserSchema = registerSchema
+  .pick({
+    name: true,
+    email: true,
+    phone: true,
+    city: true,
+  })
+  .partial()
+  .refine((payload) => Object.keys(payload).length > 0, {
+    message: 'At least one profile field is required',
+  });
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type UpdateCurrentUserInput = z.infer<typeof updateCurrentUserSchema>;
