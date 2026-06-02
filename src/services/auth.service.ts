@@ -4,6 +4,7 @@ import { UserModel } from '../models/user.model';
 import { env } from '../config/env';
 import {
   AuthResult,
+  ChangePasswordInput,
   LoginUserInput,
   RegisterUserInput,
   UpdateCurrentUserInput,
@@ -75,6 +76,30 @@ class AuthService {
     }
 
     return toUserPublic(user);
+  }
+
+  async changePassword(
+    userId: string,
+    payload: ChangePasswordInput,
+  ): Promise<void> {
+    const user = await UserModel.findById(userId).lean();
+
+    if (!user) {
+      throw createAppError('User not found', 404);
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(
+      payload.currentPassword,
+      user.passwordHash,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw createAppError('Current password is incorrect', 401);
+    }
+
+    const passwordHash = await bcrypt.hash(payload.newPassword, 10);
+
+    await UserModel.findByIdAndUpdate(userId, { passwordHash });
   }
 
   async updateCurrentUser(

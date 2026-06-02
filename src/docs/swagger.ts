@@ -401,6 +401,77 @@ const options: swaggerJsdoc.Options = {
           },
         },
       },
+      '/me/password': {
+        put: {
+          tags: ['Auth'],
+          summary: 'Change current user password',
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['currentPassword', 'newPassword'],
+                  properties: {
+                    currentPassword: {
+                      type: 'string',
+                      example: 'password123',
+                    },
+                    newPassword: {
+                      type: 'string',
+                      example: 'newPassword123',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Password changed successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: {
+                        type: 'string',
+                        example: 'Password changed successfully',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            400: {
+              description: 'Validation error',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            401: {
+              description: 'Unauthorized or incorrect current password',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            404: {
+              description: 'User not found',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+          },
+        },
+      },
       '/me/pets': {
         get: {
           tags: ['Pets'],
