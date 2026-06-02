@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import authRoutes from './auth.routes';
+import calendarEventsRoutes from './calendarEvents.routes';
 import healthRoutes from './health.routes';
 import meRoutes from './me.routes';
 import petsRoutes from './pets.routes';
@@ -15,5 +16,6 @@ router.use('/me', meRoutes);
 router.use('/pets', petsRoutes);
 router.use('/shelters', sheltersRoutes);
 router.use('/vets', vetsRoutes);
+router.use('/calendar/events', calendarEventsRoutes);
 
 export default router;
