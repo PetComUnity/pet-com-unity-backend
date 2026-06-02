@@ -127,6 +127,28 @@ const options: swaggerJsdoc.Options = {
             message: { type: 'string', example: 'Something went wrong' },
           },
         },
+        CalendarEvent: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: '664f1a2b3c4d5e6f7a8b9c0d' },
+            petId: { type: 'string', example: '664f1a2b3c4d5e6f7a8b9c0e' },
+            ownerId: { type: 'string', example: '664f1a2b3c4d5e6f7a8b9c0f' },
+            vetId: { type: 'string', nullable: true },
+            title: { type: 'string', example: 'Щорічне щеплення' },
+            date: { type: 'string', format: 'date-time' },
+            eventType: {
+              type: 'string',
+              enum: ['vaccination', 'vet_visit', 'checkup', 'grooming', 'medication', 'other'],
+              example: 'vaccination',
+            },
+            description: { type: 'string', nullable: true },
+            startTime: { type: 'string', example: '10:00', nullable: true },
+            endTime: { type: 'string', example: '10:30', nullable: true },
+            location: { type: 'string', example: 'Клініка Добрий лікар, Київ', nullable: true },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
       },
     },
     paths: {
@@ -657,6 +679,245 @@ const options: swaggerJsdoc.Options = {
             },
             404: {
               description: 'Pet not found',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/calendar/events': {
+        get: {
+          tags: ['Calendar'],
+          summary: 'Get calendar events for the current user',
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: 'month',
+              in: 'query',
+              required: false,
+              description: 'Month number (1–12)',
+              schema: { type: 'integer', minimum: 1, maximum: 12, example: 6 },
+            },
+            {
+              name: 'year',
+              in: 'query',
+              required: false,
+              description: 'Year (2000–2100)',
+              schema: { type: 'integer', minimum: 2000, maximum: 2100, example: 2026 },
+            },
+            {
+              name: 'petId',
+              in: 'query',
+              required: false,
+              description: 'Filter events by pet ID',
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'Calendar events fetched successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: { type: 'string', example: 'Calendar events fetched successfully' },
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/CalendarEvent' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            401: {
+              description: 'Unauthorized',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+          },
+        },
+        post: {
+          tags: ['Calendar'],
+          summary: 'Create a calendar event',
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['petId', 'title', 'date'],
+                  properties: {
+                    petId: { type: 'string', example: '664f1a2b3c4d5e6f7a8b9c0e' },
+                    title: { type: 'string', example: 'Щорічне щеплення' },
+                    date: { type: 'string', format: 'date-time' },
+                    eventType: {
+                      type: 'string',
+                      enum: ['vaccination', 'vet_visit', 'checkup', 'grooming', 'medication', 'other'],
+                    },
+                    description: { type: 'string' },
+                    startTime: { type: 'string', example: '10:00' },
+                    endTime: { type: 'string', example: '10:30' },
+                    location: { type: 'string', example: 'Клініка Добрий лікар, Київ' },
+                    vetId: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            201: {
+              description: 'Calendar event created successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: { type: 'string', example: 'Calendar event created successfully' },
+                      data: { $ref: '#/components/schemas/CalendarEvent' },
+                    },
+                  },
+                },
+              },
+            },
+            400: {
+              description: 'Validation error',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            401: {
+              description: 'Unauthorized',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/calendar/events/{id}': {
+        put: {
+          tags: ['Calendar'],
+          summary: 'Update a calendar event (owner only)',
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    date: { type: 'string', format: 'date-time' },
+                    eventType: {
+                      type: 'string',
+                      enum: ['vaccination', 'vet_visit', 'checkup', 'grooming', 'medication', 'other'],
+                    },
+                    description: { type: 'string' },
+                    startTime: { type: 'string' },
+                    endTime: { type: 'string' },
+                    location: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Calendar event updated successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: { type: 'string', example: 'Calendar event updated successfully' },
+                      data: { $ref: '#/components/schemas/CalendarEvent' },
+                    },
+                  },
+                },
+              },
+            },
+            401: {
+              description: 'Unauthorized',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            403: {
+              description: 'Forbidden — not the event owner',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            404: {
+              description: 'Event not found',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+          },
+        },
+        delete: {
+          tags: ['Calendar'],
+          summary: 'Delete a calendar event (owner only)',
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            200: { description: 'Calendar event deleted successfully' },
+            401: {
+              description: 'Unauthorized',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            403: {
+              description: 'Forbidden — not the event owner',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            404: {
+              description: 'Event not found',
               content: {
                 'application/json': {
                   schema: { $ref: '#/components/schemas/ErrorResponse' },
