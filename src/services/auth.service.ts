@@ -4,8 +4,10 @@ import { UserModel } from '../models/user.model';
 import { env } from '../config/env';
 import {
   AuthResult,
+  ChangePasswordInput,
   LoginUserInput,
   RegisterUserInput,
+  UpdateCurrentUserInput,
   UserPublic,
 } from '../types/user';
 import { createAppError } from '../utils/api-response';
@@ -68,6 +70,57 @@ class AuthService {
 
   async getCurrentUser(userId: string): Promise<UserPublic> {
     const user = await UserModel.findById(userId).lean();
+
+    if (!user) {
+      throw createAppError('User not found', 404);
+    }
+
+    return toUserPublic(user);
+  }
+
+  async changePassword(
+    userId: string,
+    payload: ChangePasswordInput,
+  ): Promise<void> {
+    const user = await UserModel.findById(userId).lean();
+
+    if (!user) {
+      throw createAppError('User not found', 404);
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(
+      payload.currentPassword,
+      user.passwordHash,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw createAppError('Current password is incorrect', 401);
+    }
+
+    const passwordHash = await bcrypt.hash(payload.newPassword, 10);
+
+    await UserModel.findByIdAndUpdate(userId, { passwordHash });
+  }
+
+  async updateCurrentUser(
+    userId: string,
+    payload: UpdateCurrentUserInput,
+  ): Promise<UserPublic> {
+    if (payload.email) {
+      const existing = await UserModel.findOne({
+        email: payload.email,
+        _id: { $ne: userId },
+      }).lean();
+
+      if (existing) {
+        throw createAppError('User with this email already exists', 409);
+      }
+    }
+
+    const user = await UserModel.findByIdAndUpdate(userId, payload, {
+      new: true,
+      runValidators: true,
+    }).lean();
 
     if (!user) {
       throw createAppError('User not found', 404);

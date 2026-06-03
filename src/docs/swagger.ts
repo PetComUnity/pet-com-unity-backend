@@ -33,6 +33,7 @@ const options: swaggerJsdoc.Options = {
             phone: { type: 'string', example: '+380671234567', nullable: true },
             city: { type: 'string', example: 'Київ', nullable: true },
             createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
           },
         },
         Pet: {
@@ -335,6 +336,142 @@ const options: swaggerJsdoc.Options = {
           },
         },
       },
+      '/me': {
+        put: {
+          tags: ['Auth'],
+          summary: 'Update current user',
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  minProperties: 1,
+                  properties: {
+                    name: { type: 'string', example: 'Olena Kovalchuk' },
+                    email: { type: 'string', example: 'olena@example.com' },
+                    phone: { type: 'string', example: '+380671234567' },
+                    city: { type: 'string', example: 'Kyiv' },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Current user updated successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: { type: 'string' },
+                      data: { $ref: '#/components/schemas/UserPublic' },
+                    },
+                  },
+                },
+              },
+            },
+            400: {
+              description: 'Validation error',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            401: {
+              description: 'Unauthorized',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            409: {
+              description: 'Email already exists',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/me/password': {
+        put: {
+          tags: ['Auth'],
+          summary: 'Change current user password',
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['currentPassword', 'newPassword'],
+                  properties: {
+                    currentPassword: {
+                      type: 'string',
+                      example: 'password123',
+                    },
+                    newPassword: {
+                      type: 'string',
+                      example: 'newPassword123',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Password changed successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: {
+                        type: 'string',
+                        example: 'Password changed successfully',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            400: {
+              description: 'Validation error',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            401: {
+              description: 'Unauthorized or incorrect current password',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+            404: {
+              description: 'User not found',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/ErrorResponse' },
+                },
+              },
+            },
+          },
+        },
+      },
       '/me/pets': {
         get: {
           tags: ['Pets'],
@@ -352,7 +489,8 @@ const options: swaggerJsdoc.Options = {
               name: 'size',
               in: 'query',
               required: false,
-              description: 'Filter by pet size derived from weight in kilograms: S = 0-9.99 kg, M = 10-24.99 kg, L = 25+ kg.',
+              description:
+                'Filter by pet size derived from weight in kilograms: S = 0-9.99 kg, M = 10-24.99 kg, L = 25+ kg.',
               schema: {
                 type: 'string',
                 enum: ['S', 'M', 'L'],
@@ -362,14 +500,16 @@ const options: swaggerJsdoc.Options = {
               name: 'location',
               in: 'query',
               required: false,
-              description: 'Filter pets by location using a case-insensitive partial match.',
+              description:
+                'Filter pets by location using a case-insensitive partial match.',
               schema: { type: 'string' },
             },
             {
               name: 'species',
               in: 'query',
               required: false,
-              description: 'Filter pets by species using a case-insensitive exact match.',
+              description:
+                'Filter pets by species using a case-insensitive exact match.',
               schema: { type: 'string' },
             },
             {
@@ -384,7 +524,12 @@ const options: swaggerJsdoc.Options = {
               in: 'query',
               required: false,
               description: 'Number of pets to return per page.',
-              schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+              schema: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 10,
+              },
             },
           ],
           responses: {
@@ -430,14 +575,16 @@ const options: swaggerJsdoc.Options = {
               name: 'isAdoptable',
               in: 'query',
               required: false,
-              description: 'Filter pets by adoption availability. Use true to list pets available for adoption.',
+              description:
+                'Filter pets by adoption availability. Use true to list pets available for adoption.',
               schema: { type: 'boolean' },
             },
             {
               name: 'size',
               in: 'query',
               required: false,
-              description: 'Filter by pet size derived from weight in kilograms: S = 0-9.99 kg, M = 10-24.99 kg, L = 25+ kg.',
+              description:
+                'Filter by pet size derived from weight in kilograms: S = 0-9.99 kg, M = 10-24.99 kg, L = 25+ kg.',
               schema: {
                 type: 'string',
                 enum: ['S', 'M', 'L'],
@@ -447,14 +594,16 @@ const options: swaggerJsdoc.Options = {
               name: 'location',
               in: 'query',
               required: false,
-              description: 'Filter pets by location using a case-insensitive partial match.',
+              description:
+                'Filter pets by location using a case-insensitive partial match.',
               schema: { type: 'string' },
             },
             {
               name: 'species',
               in: 'query',
               required: false,
-              description: 'Filter pets by species using a case-insensitive exact match.',
+              description:
+                'Filter pets by species using a case-insensitive exact match.',
               schema: { type: 'string' },
             },
             {
@@ -469,7 +618,12 @@ const options: swaggerJsdoc.Options = {
               in: 'query',
               required: false,
               description: 'Number of pets to return per page.',
-              schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+              schema: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 10,
+              },
             },
           ],
           responses: {

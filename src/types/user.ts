@@ -26,6 +26,18 @@ export interface LoginUserInput {
   password: string;
 }
 
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface UpdateCurrentUserInput {
+  name?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+}
+
 export interface UserPublic {
   id: string;
   name: string;
@@ -34,6 +46,7 @@ export interface UserPublic {
   phone?: string;
   city?: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface AuthResult {

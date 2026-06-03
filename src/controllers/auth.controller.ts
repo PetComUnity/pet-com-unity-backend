@@ -18,6 +18,16 @@ export const getCurrentUser = asyncHandler(async (req: AuthRequest, res) => {
   sendSuccess(res, 200, 'Current user fetched successfully', user);
 });
 
+export const updateCurrentUser = asyncHandler(async (req: AuthRequest, res) => {
+  const user = await authService.updateCurrentUser(req.userId!, req.body);
+  sendSuccess(res, 200, 'Current user updated successfully', user);
+});
+
+export const changePassword = asyncHandler(async (req: AuthRequest, res) => {
+  await authService.changePassword(req.userId!, req.body);
+  sendSuccess(res, 200, 'Password changed successfully');
+});
+
 export const logout = asyncHandler(async (_req, res) => {
   sendSuccess(res, 200, 'Logged out successfully');
 });
