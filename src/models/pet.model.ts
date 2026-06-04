@@ -15,6 +15,7 @@ export interface IPet extends Document {
   color?: string;
   description?: string;
   imageUrl?: string;
+  imageFileId?: string;
   microchipId?: string;
   isLost: boolean;
   isAdoptable: boolean;
@@ -40,6 +41,7 @@ const PetSchema = new Schema<IPet>(
     color: { type: String },
     description: { type: String },
     imageUrl: { type: String },
+    imageFileId: { type: String },
     microchipId: { type: String },
     isLost: { type: Boolean, default: false },
     isAdoptable: { type: Boolean, default: false },

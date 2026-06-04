@@ -11,6 +11,7 @@ export const createPetSchema = z.object({
   color: z.string().optional(),
   description: z.string().optional(),
   imageUrl: z.string().url('Invalid image URL').optional(),
+  imageFileId: z.string().optional(),
   microchipId: z.string().optional(),
   isLost: z.boolean().optional(),
   isAdoptable: z.boolean().optional(),

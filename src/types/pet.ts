@@ -15,6 +15,7 @@ export interface Pet {
   color?: string;
   description?: string;
   imageUrl?: string;
+  imageFileId?: string;
   microchipId?: string;
   isLost: boolean;
   isAdoptable: boolean;
@@ -52,6 +53,7 @@ export interface CreatePetInput {
   color?: string;
   description?: string;
   imageUrl?: string;
+  imageFileId?: string;
   microchipId?: string;
   isLost?: boolean;
   isAdoptable?: boolean;
