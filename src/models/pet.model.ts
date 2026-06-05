@@ -13,6 +13,7 @@ export interface IPet extends Document {
   gender?: PetGender;
   birthDate?: string;
   color?: string;
+  themeColor?: string;
   description?: string;
   imageUrl?: string;
   imageFileId?: string;
@@ -39,6 +40,7 @@ const PetSchema = new Schema<IPet>(
     },
     birthDate: { type: String },
     color: { type: String },
+    themeColor: { type: String },
     description: { type: String },
     imageUrl: { type: String },
     imageFileId: { type: String },
