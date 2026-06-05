@@ -9,6 +9,7 @@ export const createPetSchema = z.object({
   gender: z.enum(['male', 'female', 'unknown']).optional(),
   birthDate: z.string().optional(),
   color: z.string().optional(),
+  themeColor: z.string().optional(),
   description: z.string().optional(),
   imageUrl: z.string().url('Invalid image URL').optional(),
   imageFileId: z.string().optional(),

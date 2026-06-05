@@ -13,6 +13,7 @@ export interface Pet {
   gender?: PetGender;
   birthDate?: Date;
   color?: string;
+  themeColor?: string;
   description?: string;
   imageUrl?: string;
   imageFileId?: string;
@@ -51,6 +52,7 @@ export interface CreatePetInput {
   gender?: PetGender;
   birthDate?: string;
   color?: string;
+  themeColor?: string;
   description?: string;
   imageUrl?: string;
   imageFileId?: string;
