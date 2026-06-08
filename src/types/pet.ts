@@ -63,6 +63,7 @@ export interface CreatePetInput {
 
 export interface PetFilters {
   isAdoptable?: boolean;
+  isLost?: boolean;
   size?: PetSize;
   location?: string;
   species?: string;

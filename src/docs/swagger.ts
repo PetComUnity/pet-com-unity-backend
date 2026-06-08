@@ -486,6 +486,13 @@ const options: swaggerJsdoc.Options = {
               schema: { type: 'boolean' },
             },
             {
+              name: 'isLost',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by lost status. Use true to list lost pets.',
+              schema: { type: 'boolean' },
+            },
+            {
               name: 'size',
               in: 'query',
               required: false,
@@ -577,6 +584,13 @@ const options: swaggerJsdoc.Options = {
               required: false,
               description:
                 'Filter pets by adoption availability. Use true to list pets available for adoption.',
+              schema: { type: 'boolean' },
+            },
+            {
+              name: 'isLost',
+              in: 'query',
+              required: false,
+              description: 'Filter pets by lost status. Use true to list lost pets.',
               schema: { type: 'boolean' },
             },
             {
