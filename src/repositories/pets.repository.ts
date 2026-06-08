@@ -33,6 +33,10 @@ function buildPetQuery(filters: PetFilters = {}, ownerId?: string): Record<strin
     query.isAdoptable = filters.isAdoptable;
   }
 
+  if (filters.isLost !== undefined) {
+    query.isLost = filters.isLost;
+  }
+
   if (filters.size) {
     query.weight = getWeightRange(filters.size);
   }

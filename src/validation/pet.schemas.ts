@@ -25,6 +25,10 @@ export const getPetsQuerySchema = z.object({
     .enum(['true', 'false'])
     .transform((value) => value === 'true')
     .optional(),
+  isLost: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
   size: z.enum(['S', 'M', 'L']).optional(),
   location: z.string().trim().min(1, 'Location cannot be empty').optional(),
   species: z.string().trim().min(1, 'Species cannot be empty').optional(),
