@@ -27,7 +27,6 @@ export const uploadImageController = asyncHandler(async (req, res) => {
   }
 
   const folder = FOLDER_MAP[type];
-
   const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
 
   const result = await cloudinary.uploader.upload(dataUri, {
@@ -42,4 +41,23 @@ export const uploadImageController = asyncHandler(async (req, res) => {
   } else {
     res.status(200).json({ success: true, data: { fileId: result.public_id } });
   }
+});
+
+export const uploadDocumentController = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ success: false, message: 'No file provided' });
+    return;
+  }
+
+  const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+
+  const result = await cloudinary.uploader.upload(dataUri, {
+    folder: FOLDER_MAP.document,
+    resource_type: 'auto',
+  });
+
+  res.status(200).json({
+    success: true,
+    data: { fileId: result.public_id, mimeType: req.file.mimetype },
+  });
 });

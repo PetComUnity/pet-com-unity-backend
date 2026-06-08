@@ -8,6 +8,7 @@ export interface PetDocument {
   name: string;
   issuedDate: string;
   fileId: string;
+  mimeType?: string;
   createdAt?: Date;
 }
 
