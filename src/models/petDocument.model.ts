@@ -7,6 +7,7 @@ export interface IPetDocument extends Document {
   issuedDate: string;
   fileId: string;
   mimeType?: string;
+  secureUrl?: string;
 }
 
 const PetDocumentSchema = new Schema<IPetDocument>(
@@ -17,6 +18,7 @@ const PetDocumentSchema = new Schema<IPetDocument>(
     issuedDate: { type: String, required: true },
     fileId: { type: String, required: true },
     mimeType: { type: String },
+    secureUrl: { type: String },
   },
   { timestamps: true },
 );

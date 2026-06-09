@@ -5,6 +5,7 @@ export const addPetDocumentSchema = z.object({
   issuedDate: z.string().min(1, 'Issued date is required'),
   fileId: z.string().min(1, 'File ID is required'),
   mimeType: z.string().optional(),
+  secureUrl: z.string().optional(),
 });
 
 export type AddPetDocumentInput = z.infer<typeof addPetDocumentSchema>;

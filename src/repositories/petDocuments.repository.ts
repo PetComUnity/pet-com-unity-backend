@@ -9,6 +9,7 @@ export interface PetDocument {
   issuedDate: string;
   fileId: string;
   mimeType?: string;
+  secureUrl?: string;
   createdAt?: Date;
 }
 

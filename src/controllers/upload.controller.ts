@@ -1,5 +1,7 @@
 import { cloudinary } from '../config/cloudinary';
+import { PetDocumentModel } from '../models/petDocument.model';
 import { asyncHandler } from '../utils/async-handler';
+import type { AuthRequest } from '../middlewares/auth.middleware';
 
 type UploadType = 'public' | 'private' | 'document';
 
@@ -22,7 +24,12 @@ export const uploadImageController = asyncHandler(async (req, res) => {
   const type = req.body.type;
 
   if (!isValidUploadType(type)) {
-    res.status(400).json({ success: false, message: 'Invalid upload type. Use: public | private | document' });
+    res
+      .status(400)
+      .json({
+        success: false,
+        message: 'Invalid upload type. Use: public | private | document',
+      });
     return;
   }
 
@@ -43,6 +50,35 @@ export const uploadImageController = asyncHandler(async (req, res) => {
   }
 });
 
+export const deleteOrphanDocumentController = asyncHandler(
+  async (req: AuthRequest, res) => {
+    const fileId = req.params.fileId as string;
+    const publicId = fileId.replace(/--/g, '/');
+
+    if (!publicId.startsWith('documents/')) {
+      res
+        .status(400)
+        .json({ success: false, message: 'Invalid file reference' });
+      return;
+    }
+
+    const inUse = await PetDocumentModel.exists({ fileId: publicId });
+    if (inUse) {
+      res
+        .status(409)
+        .json({ success: false, message: 'File is already in use' });
+      return;
+    }
+
+    await Promise.allSettled([
+      cloudinary.uploader.destroy(publicId, { resource_type: 'image' }),
+      cloudinary.uploader.destroy(publicId, { resource_type: 'raw' }),
+    ]);
+
+    res.status(200).json({ success: true, message: 'File removed' });
+  },
+);
+
 export const uploadDocumentController = asyncHandler(async (req, res) => {
   if (!req.file) {
     res.status(400).json({ success: false, message: 'No file provided' });
@@ -58,6 +94,10 @@ export const uploadDocumentController = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    data: { fileId: result.public_id, mimeType: req.file.mimetype },
+    data: {
+      fileId: result.public_id,
+      mimeType: req.file.mimetype,
+      secureUrl: result.secure_url,
+    },
   });
 });

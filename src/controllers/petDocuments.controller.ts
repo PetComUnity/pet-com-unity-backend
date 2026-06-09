@@ -3,7 +3,15 @@ import { asyncHandler } from '../utils/async-handler';
 import { createAppError, sendSuccess } from '../utils/api-response';
 import { addPetDocumentSchema } from '../validation/petDocument.schemas';
 import { petDocumentsRepository } from '../repositories/petDocuments.repository';
+import { cloudinary } from '../config/cloudinary';
 import type { AuthRequest } from '../middlewares/auth.middleware';
+
+async function deleteFromCloudinary(fileId: string): Promise<void> {
+  await Promise.allSettled([
+    cloudinary.uploader.destroy(fileId, { resource_type: 'image' }),
+    cloudinary.uploader.destroy(fileId, { resource_type: 'raw' }),
+  ]);
+}
 
 async function requirePetOwner(petId: string, userId: string) {
   const pet = await PetModel.findById(petId).lean();
@@ -38,7 +46,13 @@ export const deletePetDocument = asyncHandler(async (req: AuthRequest, res) => {
   const existing = await petDocumentsRepository.getById(docId);
   if (!existing) throw createAppError('Document not found', 404);
   if (existing.ownerId !== req.userId) throw createAppError('Access denied', 403);
+  if (existing.petId !== petId) throw createAppError('Access denied', 403);
 
   const deleted = await petDocumentsRepository.delete(docId);
+
+  if (deleted?.fileId) {
+    void deleteFromCloudinary(deleted.fileId);
+  }
+
   sendSuccess(res, 200, 'Document deleted successfully', deleted);
 });
