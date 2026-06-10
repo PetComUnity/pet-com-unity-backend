@@ -9,6 +9,7 @@ import {
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { validateSchema } from '../middlewares/validate-schema.middleware';
 import { createPetSchema, updatePetSchema } from '../validation/pet.schemas';
+import petDocumentsRoutes from './petDocuments.routes';
 
 const router = Router();
 
@@ -17,5 +18,7 @@ router.get('/:id', getPetById);
 router.post('/', authMiddleware, validateSchema(createPetSchema), createPet);
 router.put('/:id', authMiddleware, validateSchema(updatePetSchema), updatePet);
 router.delete('/:id', authMiddleware, deletePet);
+
+router.use('/:petId/documents', petDocumentsRoutes);
 
 export default router;
