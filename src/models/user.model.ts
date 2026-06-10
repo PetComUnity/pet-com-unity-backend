@@ -7,6 +7,7 @@ export interface IUser extends Document {
   role: 'owner' | 'vet' | 'shelter' | 'admin';
   phone?: string;
   city?: string;
+  avatarFileId?: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -21,6 +22,7 @@ const UserSchema = new Schema<IUser>(
     },
     phone: { type: String },
     city: { type: String },
+    avatarFileId: { type: String },
   },
   { timestamps: true },
 );

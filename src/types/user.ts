@@ -8,6 +8,7 @@ export interface User {
   role: UserRole;
   phone?: string;
   city?: string;
+  avatarFileId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +37,7 @@ export interface UpdateCurrentUserInput {
   email?: string;
   phone?: string;
   city?: string;
+  avatarFileId?: string;
 }
 
 export interface UserPublic {
@@ -45,6 +47,7 @@ export interface UserPublic {
   role: UserRole;
   phone?: string;
   city?: string;
+  avatarFileId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

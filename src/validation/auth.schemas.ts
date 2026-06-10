@@ -45,13 +45,18 @@ export const changePasswordSchema = z
     path: ['newPassword'],
   });
 
-export const updateCurrentUserSchema = registerSchema
+const updateCurrentUserFieldsSchema = registerSchema
   .pick({
     name: true,
     email: true,
     phone: true,
     city: true,
   })
+  .extend({
+    avatarFileId: z.string().min(1, 'Avatar file id is required').optional(),
+  });
+
+export const updateCurrentUserSchema = updateCurrentUserFieldsSchema
   .partial()
   .refine((payload) => Object.keys(payload).length > 0, {
     message: 'At least one profile field is required',
