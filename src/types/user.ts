@@ -8,6 +8,10 @@ export interface User {
   role: UserRole;
   phone?: string;
   city?: string;
+  website?: string;
+  socialMediaLink?: string;
+  address?: string;
+  avatarFileId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +23,9 @@ export interface RegisterUserInput {
   role: UserRole;
   phone?: string;
   city?: string;
+  website?: string;
+  socialMediaLink?: string;
+  address?: string;
 }
 
 export interface LoginUserInput {
@@ -36,6 +43,10 @@ export interface UpdateCurrentUserInput {
   email?: string;
   phone?: string;
   city?: string;
+  website?: string;
+  socialMediaLink?: string;
+  address?: string;
+  avatarFileId?: string;
 }
 
 export interface UserPublic {
@@ -45,6 +56,10 @@ export interface UserPublic {
   role: UserRole;
   phone?: string;
   city?: string;
+  website?: string;
+  socialMediaLink?: string;
+  address?: string;
+  avatarFileId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -3,19 +3,33 @@ import { PetDocumentModel } from '../models/petDocument.model';
 import { asyncHandler } from '../utils/async-handler';
 import type { AuthRequest } from '../middlewares/auth.middleware';
 
-type UploadType = 'public' | 'private' | 'document';
+type UploadType = 'public' | 'private' | 'document' | 'avatar';
 
 const FOLDER_MAP: Record<UploadType, string> = {
   public: 'pet-avatars/public',
   private: 'pet-avatars/private',
   document: 'documents',
+  avatar: 'user-avatars/private',
 };
 
 function isValidUploadType(value: unknown): value is UploadType {
-  return value === 'public' || value === 'private' || value === 'document';
+  return (
+    value === 'public' ||
+    value === 'private' ||
+    value === 'document' ||
+    value === 'avatar'
+  );
 }
 
-export const uploadImageController = asyncHandler(async (req, res) => {
+function getUploadFolder(type: UploadType, userId: string): string {
+  if (type === 'avatar') {
+    return `${FOLDER_MAP.avatar}/${userId}`;
+  }
+
+  return FOLDER_MAP[type];
+}
+
+export const uploadImageController = asyncHandler(async (req: AuthRequest, res) => {
   if (!req.file) {
     res.status(400).json({ success: false, message: 'No image file provided' });
     return;
@@ -28,12 +42,13 @@ export const uploadImageController = asyncHandler(async (req, res) => {
       .status(400)
       .json({
         success: false,
-        message: 'Invalid upload type. Use: public | private | document',
+        message: 'Invalid upload type. Use: public | private | document | avatar',
       });
     return;
   }
 
-  const folder = FOLDER_MAP[type];
+  const folder = getUploadFolder(type, req.userId!);
+
   const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
 
   const result = await cloudinary.uploader.upload(dataUri, {

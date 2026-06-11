@@ -32,6 +32,22 @@ const options: swaggerJsdoc.Options = {
             },
             phone: { type: 'string', example: '+380671234567', nullable: true },
             city: { type: 'string', example: 'Київ', nullable: true },
+            website: {
+              type: 'string',
+              example: 'https://pet-owner.example.com',
+              nullable: true,
+            },
+            socialMediaLink: {
+              type: 'string',
+              example: 'https://instagram.com/olena.pets',
+              nullable: true,
+            },
+            address: {
+              type: 'string',
+              example: 'вул. Хрещатик 1, Київ',
+              nullable: true,
+            },
+            avatarFileId: { type: 'string', nullable: true },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
           },
@@ -174,6 +190,18 @@ const options: swaggerJsdoc.Options = {
                     },
                     phone: { type: 'string', example: '+380671234567' },
                     city: { type: 'string', example: 'Київ' },
+                    website: {
+                      type: 'string',
+                      example: 'https://pet-owner.example.com',
+                    },
+                    socialMediaLink: {
+                      type: 'string',
+                      example: 'https://instagram.com/olena.pets',
+                    },
+                    address: {
+                      type: 'string',
+                      example: 'вул. Хрещатик 1, Київ',
+                    },
                   },
                 },
               },
@@ -353,6 +381,19 @@ const options: swaggerJsdoc.Options = {
                     email: { type: 'string', example: 'olena@example.com' },
                     phone: { type: 'string', example: '+380671234567' },
                     city: { type: 'string', example: 'Kyiv' },
+                    website: {
+                      type: 'string',
+                      example: 'https://pet-owner.example.com',
+                    },
+                    socialMediaLink: {
+                      type: 'string',
+                      example: 'https://instagram.com/olena.pets',
+                    },
+                    address: {
+                      type: 'string',
+                      example: 'Khreshchatyk St 1, Kyiv',
+                    },
+                    avatarFileId: { type: 'string', example: 'pet-avatars/private/spro3cgp5loh0jmjk26g' },
                   },
                 },
               },

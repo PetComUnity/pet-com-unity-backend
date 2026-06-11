@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import { cloudinary } from '../config/cloudinary';
 import { PetModel } from '../models/pet.model';
 import { PetDocumentModel } from '../models/petDocument.model';
+import { UserModel } from '../models/user.model';
 import { asyncHandler } from '../utils/async-handler';
 import type { AuthRequest } from '../middlewares/auth.middleware';
 
@@ -85,12 +86,17 @@ export const getPrivateFileController = asyncHandler(async (req: AuthRequest, re
     return;
   }
 
-  const pet = await PetModel.findOne({ imageFileId: publicId });
-  if (!pet) {
+  const [pet, user] = await Promise.all([
+    PetModel.findOne({ imageFileId: publicId }).lean(),
+    UserModel.findOne({ _id: userId, avatarFileId: publicId }).lean(),
+  ]);
+
+  if (!pet && !user) {
     res.status(404).json({ success: false, message: 'File not found' });
     return;
   }
-  if (pet.ownerId !== userId) {
+
+  if (pet && pet.ownerId !== userId && !user) {
     res.status(403).json({ success: false, message: 'Access denied' });
     return;
   }
