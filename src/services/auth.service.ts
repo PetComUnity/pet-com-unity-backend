@@ -38,6 +38,9 @@ class AuthService {
       role: payload.role,
       phone: payload.phone,
       city: payload.city,
+      website: payload.website,
+      socialMediaLink: payload.socialMediaLink,
+      address: payload.address,
     });
 
     const userPublic = toUserPublic(user.toObject());
