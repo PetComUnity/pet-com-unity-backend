@@ -56,7 +56,7 @@ describe('JWT utilities', () => {
 });
 
 describe('Zod validation schemas', () => {
-  it('validates authentication payloads', () => {
+  it('accepts valid registration data', () => {
     expect(
       registerSchema.safeParse({
         name: 'Test User',
@@ -65,6 +65,9 @@ describe('Zod validation schemas', () => {
         role: 'owner',
       }).success,
     ).toBe(true);
+  });
+
+  it('rejects invalid registration data', () => {
     expect(
       registerSchema.safeParse({
         name: 'T',
@@ -73,12 +76,19 @@ describe('Zod validation schemas', () => {
         role: 'owner',
       }).success,
     ).toBe(false);
+  });
+
+  it('accepts valid login data', () => {
     expect(
       loginSchema.safeParse({
         email: 'test@example.com',
         password: 'Password123!',
       }).success,
     ).toBe(true);
+  });
+
+  it('rejects identical current and new passwords', () => {
+    // changePasswordSchema uses .refine() to enforce currentPassword !== newPassword
     expect(
       changePasswordSchema.safeParse({
         currentPassword: 'Password123!',
@@ -87,7 +97,7 @@ describe('Zod validation schemas', () => {
     ).toBe(false);
   });
 
-  it('validates pet payloads and query filters', () => {
+  it('accepts valid pet creation data', () => {
     expect(
       createPetSchema.safeParse({
         name: 'Mila',
@@ -96,6 +106,9 @@ describe('Zod validation schemas', () => {
         imageUrl: 'https://example.com/mila.jpg',
       }).success,
     ).toBe(true);
+  });
+
+  it('rejects invalid pet creation data', () => {
     expect(
       createPetSchema.safeParse({
         name: '',
@@ -103,7 +116,9 @@ describe('Zod validation schemas', () => {
         weight: -1,
       }).success,
     ).toBe(false);
+  });
 
+  it('coerces string query params for pet filters', () => {
     const query = getPetsQuerySchema.parse({
       isAdoptable: 'true',
       size: 'M',
@@ -119,7 +134,7 @@ describe('Zod validation schemas', () => {
     });
   });
 
-  it('validates calendar and document payloads', () => {
+  it('accepts valid calendar event creation data', () => {
     expect(
       createCalendarEventSchema.safeParse({
         petId: 'pet-1',
@@ -128,6 +143,9 @@ describe('Zod validation schemas', () => {
         eventType: 'vaccination',
       }).success,
     ).toBe(true);
+  });
+
+  it('rejects invalid calendar event creation data', () => {
     expect(
       createCalendarEventSchema.safeParse({
         petId: 'pet-1',
@@ -135,9 +153,15 @@ describe('Zod validation schemas', () => {
         date: 'June 15',
       }).success,
     ).toBe(false);
+  });
+
+  it('coerces calendar events query params', () => {
     expect(
       getCalendarEventsQuerySchema.parse({ month: '6', year: '2026' }),
     ).toMatchObject({ month: 6, year: 2026 });
+  });
+
+  it('accepts valid pet document data', () => {
     expect(
       addPetDocumentSchema.safeParse({
         name: 'Certificate',
