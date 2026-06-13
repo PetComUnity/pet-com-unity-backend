@@ -1,9 +1,17 @@
 import multer from 'multer';
 
-const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_IMAGE_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
 const ALLOWED_DOCUMENT_MIME_TYPES = [
   // Images
-  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
   // PDF
   'application/pdf',
   // Word
@@ -16,8 +24,12 @@ const ALLOWED_DOCUMENT_MIME_TYPES = [
   'text/plain',
 ];
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;    // 5 MB for avatars
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB for avatars
 const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10 MB for documents
+
+function createUploadError(message: string): Error & { statusCode: number } {
+  return Object.assign(new Error(message), { statusCode: 400 });
+}
 
 export const uploadImage = multer({
   storage: multer.memoryStorage(),
@@ -26,7 +38,9 @@ export const uploadImage = multer({
     if (ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype)) {
       callback(null, true);
     } else {
-      callback(new Error('Only JPEG, PNG, WebP and GIF images are allowed'));
+      callback(
+        createUploadError('Only JPEG, PNG, WebP and GIF images are allowed'),
+      );
     }
   },
 }).single('image');
@@ -38,7 +52,11 @@ export const uploadDocument = multer({
     if (ALLOWED_DOCUMENT_MIME_TYPES.includes(file.mimetype)) {
       callback(null, true);
     } else {
-      callback(new Error('Allowed formats: images (JPEG, PNG, WebP, GIF), PDF, Word (.doc/.docx), Excel (.xls/.xlsx), plain text (.txt)'));
+      callback(
+        createUploadError(
+          'Allowed formats: images (JPEG, PNG, WebP, GIF), PDF, Word (.doc/.docx), Excel (.xls/.xlsx), plain text (.txt)',
+        ),
+      );
     }
   },
 }).single('file');
