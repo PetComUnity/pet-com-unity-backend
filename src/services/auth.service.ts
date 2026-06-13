@@ -1,7 +1,4 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/user.model';
-import { env } from '../config/env';
 import {
   AuthResult,
   ChangePasswordInput,
@@ -10,15 +7,12 @@ import {
   UpdateCurrentUserInput,
   UserPublic,
 } from '../types/user';
+import { comparePassword, generateJwtToken, hashPassword } from '../utils/auth';
 import { createAppError } from '../utils/api-response';
 
 function toUserPublic(doc: any): UserPublic {
   const { _id, __v, passwordHash, ...rest } = doc;
   return { ...rest, id: _id.toString() };
-}
-
-function generateToken(userId: string): string {
-  return jwt.sign({ userId }, env.jwtSecret, { expiresIn: '7d' });
 }
 
 class AuthService {
@@ -29,7 +23,7 @@ class AuthService {
       throw createAppError('User with this email already exists', 409);
     }
 
-    const passwordHash = await bcrypt.hash(payload.password, 10);
+    const passwordHash = await hashPassword(payload.password);
 
     const user = await UserModel.create({
       name: payload.name,
@@ -44,7 +38,7 @@ class AuthService {
     });
 
     const userPublic = toUserPublic(user.toObject());
-    const token = generateToken(userPublic.id);
+    const token = generateJwtToken(userPublic.id);
 
     return { user: userPublic, token };
   }
@@ -56,7 +50,7 @@ class AuthService {
       throw createAppError('Invalid email or password', 401);
     }
 
-    const isPasswordValid = await bcrypt.compare(
+    const isPasswordValid = await comparePassword(
       payload.password,
       user.passwordHash,
     );
@@ -66,7 +60,7 @@ class AuthService {
     }
 
     const userPublic = toUserPublic(user);
-    const token = generateToken(userPublic.id);
+    const token = generateJwtToken(userPublic.id);
 
     return { user: userPublic, token };
   }
@@ -91,7 +85,7 @@ class AuthService {
       throw createAppError('User not found', 404);
     }
 
-    const isCurrentPasswordValid = await bcrypt.compare(
+    const isCurrentPasswordValid = await comparePassword(
       payload.currentPassword,
       user.passwordHash,
     );
@@ -100,7 +94,7 @@ class AuthService {
       throw createAppError('Current password is incorrect', 401);
     }
 
-    const passwordHash = await bcrypt.hash(payload.newPassword, 10);
+    const passwordHash = await hashPassword(payload.newPassword);
 
     await UserModel.findByIdAndUpdate(userId, { passwordHash });
   }
@@ -121,7 +115,7 @@ class AuthService {
     }
 
     const user = await UserModel.findByIdAndUpdate(userId, payload, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     }).lean();
 

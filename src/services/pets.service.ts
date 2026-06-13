@@ -1,5 +1,12 @@
 import { petsRepository } from '../repositories/pets.repository';
-import { CreatePetInput, PaginatedPets, Pet, PetFilters, UpdatePetInput } from '../types/pet';
+import {
+  CreatePetInput,
+  PaginatedPets,
+  Pet,
+  PetFilters,
+  UpdatePetInput,
+} from '../types/pet';
+import { assertCanAccessOwnedResource } from '../utils/access-control';
 import { createAppError } from '../utils/api-response';
 
 class PetsService {
@@ -7,7 +14,10 @@ class PetsService {
     return petsRepository.getAll(filters);
   }
 
-  async getMyPets(ownerId: string, filters: PetFilters = {}): Promise<PaginatedPets> {
+  async getMyPets(
+    ownerId: string,
+    filters: PetFilters = {},
+  ): Promise<PaginatedPets> {
     return petsRepository.getByOwnerId(ownerId, filters);
   }
 
@@ -25,7 +35,19 @@ class PetsService {
     return petsRepository.create(payload);
   }
 
-  async updatePet(id: string, payload: UpdatePetInput): Promise<Pet> {
+  async updatePet(
+    id: string,
+    userId: string,
+    payload: UpdatePetInput,
+  ): Promise<Pet> {
+    const existing = await petsRepository.getById(id);
+
+    if (!existing) {
+      throw createAppError('Pet not found', 404);
+    }
+
+    assertCanAccessOwnedResource(existing.ownerId, userId);
+
     const pet = await petsRepository.update(id, payload);
 
     if (!pet) {
@@ -35,7 +57,15 @@ class PetsService {
     return pet;
   }
 
-  async deletePet(id: string): Promise<Pet> {
+  async deletePet(id: string, userId: string): Promise<Pet> {
+    const existing = await petsRepository.getById(id);
+
+    if (!existing) {
+      throw createAppError('Pet not found', 404);
+    }
+
+    assertCanAccessOwnedResource(existing.ownerId, userId);
+
     const pet = await petsRepository.delete(id);
 
     if (!pet) {

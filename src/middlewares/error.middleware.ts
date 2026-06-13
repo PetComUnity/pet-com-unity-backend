@@ -1,10 +1,17 @@
 import { ErrorRequestHandler } from 'express';
+import multer from 'multer';
 
 import { AppError } from '../types/api-response';
 import { buildErrorResponse } from '../utils/api-response';
 
-export const errorMiddleware: ErrorRequestHandler = (error: AppError, _req, res, _next) => {
-  const statusCode = error.statusCode ?? 500;
+export const errorMiddleware: ErrorRequestHandler = (
+  error: AppError,
+  _req,
+  res,
+  _next,
+) => {
+  const statusCode =
+    error.statusCode ?? (error instanceof multer.MulterError ? 400 : 500);
   const message = error.message || 'Internal server error';
 
   if (statusCode >= 500) {

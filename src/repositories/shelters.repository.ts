@@ -32,7 +32,7 @@ class SheltersRepository {
     payload: UpdateShelterInput,
   ): Promise<Shelter | undefined> {
     const shelter = await ShelterModel.findByIdAndUpdate(id, payload, {
-      new: true,
+      returnDocument: 'after',
     }).lean();
     if (!shelter) return undefined;
     return toShelter(shelter);

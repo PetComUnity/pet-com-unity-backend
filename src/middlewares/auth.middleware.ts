@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env';
 import { buildErrorResponse } from '../utils/api-response';
+import { verifyJwtToken } from '../utils/auth';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -22,7 +21,7 @@ export const authMiddleware = (
   const token = authHeader.split(' ')[1];
 
   try {
-    const payload = jwt.verify(token, env.jwtSecret) as { userId: string };
+    const payload = verifyJwtToken(token);
     req.userId = payload.userId;
     next();
   } catch {

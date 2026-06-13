@@ -25,7 +25,7 @@ class VetsRepository {
 
   async update(id: string, payload: UpdateVetInput): Promise<Vet | undefined> {
     const vet = await VetModel.findByIdAndUpdate(id, payload, {
-      new: true,
+      returnDocument: 'after',
     }).lean();
     if (!vet) return undefined;
     return toVet(vet);
