@@ -1,22 +1,49 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   createShelter,
   getShelterById,
   getShelters,
-} from '../controllers/shelters.controller';
-import { authMiddleware } from '../middlewares/auth.middleware';
-import { validateSchema } from '../middlewares/validate-schema.middleware';
-import { createShelterSchema } from '../validation/shelter.schemas';
+  getMyShelter,
+  updateMyShelter,
+} from "../controllers/shelters.controller";
+
+import { authMiddleware } from "../middlewares/auth.middleware";
+import { validateSchema } from "../middlewares/validate-schema.middleware";
+import { createShelterSchema } from "../validation/shelter.schemas";
 
 const router = Router();
 
-router.get('/', getShelters);
-router.get('/:id', getShelterById);
+/**
+ * PUBLIC
+ */
+router.get("/", getShelters);
+
+/**
+ * IMPORTANT:
+ * MUST BE BEFORE '/:id'
+ */
+router.get(
+  "/me",
+  authMiddleware,
+  getMyShelter
+);
+
+router.get("/:id", getShelterById);
+
+/**
+ * SHELTER ONLY
+ */
 router.post(
-  '/',
+  "/",
   authMiddleware,
   validateSchema(createShelterSchema),
-  createShelter,
+  createShelter
+);
+
+router.patch(
+  "/",
+  authMiddleware,
+  updateMyShelter
 );
 
 export default router;

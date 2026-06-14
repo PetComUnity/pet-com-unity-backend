@@ -1,10 +1,11 @@
-import { NextFunction, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env';
-import { buildErrorResponse } from '../utils/api-response';
+import { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import { env } from "../config/env";
+import { buildErrorResponse } from "../utils/api-response";
 
 export interface AuthRequest extends Request {
   userId?: string;
+  role?: string;
 }
 
 export const authMiddleware = (
@@ -14,18 +15,43 @@ export const authMiddleware = (
 ): void => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json(buildErrorResponse('No token provided'));
+  if (
+    !authHeader ||
+    !authHeader.startsWith("Bearer ")
+  ) {
+    res
+      .status(401)
+      .json(
+        buildErrorResponse(
+          "No token provided",
+        ),
+      );
+
     return;
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(" ")[1];
 
   try {
-    const payload = jwt.verify(token, env.jwtSecret) as { userId: string };
+    const payload = jwt.verify(
+      token,
+      env.jwtSecret,
+    ) as {
+      userId: string;
+      role: string;
+    };
+
     req.userId = payload.userId;
+    req.role = payload.role;
+
     next();
   } catch {
-    res.status(401).json(buildErrorResponse('Invalid or expired token'));
+    res
+      .status(401)
+      .json(
+        buildErrorResponse(
+          "Invalid or expired token",
+        ),
+      );
   }
 };
