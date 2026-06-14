@@ -100,3 +100,5 @@ const ShelterSchema = new Schema(
 export const Shelter =
   models.Shelter ||
   model("Shelter", ShelterSchema);
+
+export const ShelterModel = Shelter;

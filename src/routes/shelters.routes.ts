@@ -1,49 +1,35 @@
-import { Router } from "express";
+import { Router } from 'express';
 import {
   createShelter,
+  getMyShelter,
   getShelterById,
   getShelters,
-  getMyShelter,
   updateMyShelter,
-} from "../controllers/shelters.controller";
-
-import { authMiddleware } from "../middlewares/auth.middleware";
-import { validateSchema } from "../middlewares/validate-schema.middleware";
-import { createShelterSchema } from "../validation/shelter.schemas";
+} from '../controllers/shelters.controller';
+import { authMiddleware } from '../middlewares/auth.middleware';
+import { requireRole } from '../middlewares/role.middleware';
+import { validateSchema } from '../middlewares/validate-schema.middleware';
+import { createShelterSchema } from '../validation/shelter.schemas';
 
 const router = Router();
 
-/**
- * PUBLIC
- */
-router.get("/", getShelters);
+router.get('/', getShelters);
+router.get('/me', authMiddleware, getMyShelter);
+router.get('/:id', getShelterById);
 
-/**
- * IMPORTANT:
- * MUST BE BEFORE '/:id'
- */
-router.get(
-  "/me",
-  authMiddleware,
-  getMyShelter
-);
-
-router.get("/:id", getShelterById);
-
-/**
- * SHELTER ONLY
- */
 router.post(
-  "/",
+  '/',
   authMiddleware,
+  requireRole(['shelter', 'admin']),
   validateSchema(createShelterSchema),
-  createShelter
+  createShelter,
 );
 
 router.patch(
-  "/",
+  '/',
   authMiddleware,
-  updateMyShelter
+  requireRole(['shelter', 'admin']),
+  updateMyShelter,
 );
 
 export default router;
