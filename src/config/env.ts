@@ -34,7 +34,7 @@ if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !pr
 
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: parsePort(process.env.PORT),
+  port: parsePort(process.env.PORT ?? process.env.Port),
   apiBasePath: normalizeApiBasePath(process.env.API_BASE_PATH),
   frontendOrigin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
   mongodbUri: process.env.MONGODB_URI,

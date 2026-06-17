@@ -9,11 +9,27 @@ import routes from './routes';
 
 const app = express();
 
+const allowedOrigins = new Set(
+  [
+    env.frontendOrigin,
+    `http://localhost:${env.port}`,
+    `http://127.0.0.1:${env.port}`,
+    ...(process.env.ALLOWED_ORIGINS?.split(',') ?? []),
+  ]
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
+
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') ?? [
-      'http://localhost:3000',
-    ],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    },
     credentials: true,
   }),
 );

@@ -2,6 +2,8 @@ import https from 'https';
 import { Readable } from 'stream';
 import request from 'supertest';
 import app from '../../src/app';
+import { env } from '../../src/config/env';
+import { swaggerSpec } from '../../src/docs/swagger';
 import { PetDocumentModel } from '../../src/models/petDocument.model';
 import { mockCloudinary } from '../mocks/cloudinary.mock';
 import {
@@ -40,6 +42,43 @@ function mockStorageDownload(body = 'private file'): jest.SpyInstance {
     };
   }) as any);
 }
+
+describe('swagger and CORS configuration', () => {
+  it('uses the current API base path and a valid bearer auth scheme', () => {
+    const spec = swaggerSpec as {
+      servers?: unknown;
+      components?: {
+        securitySchemes?: Record<string, unknown>;
+      };
+    };
+
+    expect(spec.servers).toEqual([
+      { url: '/api', description: 'Current server' },
+    ]);
+    expect(
+      spec.components?.securitySchemes?.bearerAuth,
+    ).toMatchObject({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+    });
+  });
+
+  it('allows the local Swagger UI origin to call API routes', async () => {
+    const swaggerOrigin = `http://localhost:${env.port}`;
+
+    const response = await request(app)
+      .options('/api/health')
+      .set('Origin', swaggerOrigin)
+      .set('Access-Control-Request-Method', 'GET');
+
+    expect([200, 204]).toContain(response.status);
+    expect(response.headers['access-control-allow-origin']).toBe(
+      swaggerOrigin,
+    );
+    expect(response.headers['access-control-allow-credentials']).toBe('true');
+  });
+});
 
 describe('authentication API', () => {
   it('registers a user successfully', async () => {

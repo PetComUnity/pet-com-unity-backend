@@ -1,4 +1,5 @@
 import swaggerJsdoc from 'swagger-jsdoc';
+import { env } from '../config/env';
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -9,7 +10,7 @@ const options: swaggerJsdoc.Options = {
       description: 'Backend API для платформи цифрової ідентифікації тварин',
     },
     servers: [
-      { url: 'http://localhost:5000/api', description: 'Local development' },
+      { url: env.apiBasePath, description: 'Current server' },
     ],
     components: {
       securitySchemes: {
