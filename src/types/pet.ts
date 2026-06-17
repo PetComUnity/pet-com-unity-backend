@@ -11,7 +11,7 @@ export interface Pet {
   weight?: number;
   location?: string;
   gender?: PetGender;
-  birthDate?: Date;
+  birthDate?: string;
   color?: string;
   themeColor?: string;
   description?: string;
@@ -26,6 +26,21 @@ export interface Pet {
   publicQrId: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface PublicPetProfile {
+  name: string;
+  species: string;
+  breed?: string;
+  birthDate?: string;
+  color?: string;
+  gender?: PetGender;
+  description?: string;
+  imageUrl?: string;
+  isLost: boolean;
+  isAdoptable: boolean;
+  verificationStatus: PetVerificationStatus;
+  publicQrId: string;
 }
 
 export interface PaginationMeta {
@@ -59,6 +74,7 @@ export interface CreatePetInput {
   microchipId?: string;
   isLost?: boolean;
   isAdoptable?: boolean;
+  publicQrId?: string;
 }
 
 export interface PetFilters {

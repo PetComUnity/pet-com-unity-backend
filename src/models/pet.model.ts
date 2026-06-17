@@ -1,4 +1,8 @@
 import { Document, Schema, model } from 'mongoose';
+import {
+  generatePublicQrId,
+  isValidPublicQrId,
+} from '../utils/public-qr-id';
 
 export type PetVerificationStatus = 'unverified' | 'verified';
 export type PetGender = 'male' | 'female' | 'unknown';
@@ -54,9 +58,25 @@ const PetSchema = new Schema<IPet>(
     },
     verifiedBy: { type: String },
     verifiedAt: { type: Date },
-    publicQrId: { type: String, required: true, unique: true },
+    publicQrId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      validate: {
+        validator: isValidPublicQrId,
+        message: 'Invalid public QR ID',
+      },
+    },
   },
   { timestamps: true },
 );
+
+PetSchema.pre('validate', function setDefaultPublicQrId() {
+  if (!this.publicQrId) {
+    this.publicQrId = generatePublicQrId(this.name || 'pet');
+  }
+});
 
 export const PetModel = model<IPet>('Pet', PetSchema);

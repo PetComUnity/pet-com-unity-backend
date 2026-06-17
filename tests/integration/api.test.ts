@@ -180,6 +180,145 @@ describe('pets API', () => {
     });
   });
 
+  it('loads a public pet profile by publicQrId without authentication', async () => {
+    const owner = await createTestUser();
+    await createTestPet(owner.user.id, {
+      name: 'Milo',
+      species: 'Dog',
+      breed: 'Mixed breed',
+      birthDate: '2022-04-12',
+      color: 'Brown',
+      gender: 'male',
+      description: 'Friendly and curious.',
+      imageUrl: 'https://images.example.com/milo.jpg',
+      isLost: false,
+      isAdoptable: false,
+      verificationStatus: 'verified',
+      publicQrId: 'milo-ab12cd34',
+    });
+
+    const response = await request(app).get('/api/pets/public/milo-ab12cd34');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      success: true,
+      message: 'Public pet profile loaded.',
+      data: {
+        name: 'Milo',
+        species: 'Dog',
+        breed: 'Mixed breed',
+        birthDate: '2022-04-12',
+        color: 'Brown',
+        gender: 'male',
+        description: 'Friendly and curious.',
+        imageUrl: 'https://images.example.com/milo.jpg',
+        isLost: false,
+        isAdoptable: false,
+        verificationStatus: 'verified',
+        publicQrId: 'milo-ab12cd34',
+      },
+    });
+    expect(Object.keys(response.body.data).sort()).toEqual(
+      [
+        'birthDate',
+        'breed',
+        'color',
+        'description',
+        'gender',
+        'imageUrl',
+        'isAdoptable',
+        'isLost',
+        'name',
+        'publicQrId',
+        'species',
+        'verificationStatus',
+      ].sort(),
+    );
+  });
+
+  it('returns 404 for an unknown publicQrId', async () => {
+    const response = await request(app).get(
+      '/api/pets/public/missing-public-profile',
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({
+      success: false,
+      message: 'Public pet profile not found.',
+    });
+  });
+
+  it('does not leak private fields from public pet profiles', async () => {
+    const owner = await createTestUser();
+    await createTestPet(owner.user.id, {
+      name: 'Private Fields Pet',
+      species: 'dog',
+      imageUrl:
+        'https://res.cloudinary.com/test-cloud/image/upload/v1/pet-avatars/private/private-file.jpg',
+      imageFileId: 'pet-avatars/private/private-file',
+      microchipId: 'secret-chip',
+      publicQrId: 'private-fields-pet',
+    });
+
+    const response = await request(app).get(
+      '/api/pets/public/private-fields-pet',
+    );
+
+    expect(response.status).toBe(200);
+    for (const field of [
+      '_id',
+      'id',
+      'ownerId',
+      'owner',
+      'ownerEmail',
+      'ownerPhone',
+      'imageFileId',
+      'documents',
+      'medicalFiles',
+      'microchipId',
+    ]) {
+      expect(response.body.data).not.toHaveProperty(field);
+    }
+    expect(response.body.data).not.toHaveProperty('imageUrl');
+    expect(JSON.stringify(response.body.data)).not.toContain('private-file');
+    expect(JSON.stringify(response.body.data)).not.toContain('secret-chip');
+  });
+
+  it('generates publicQrId when creating a pet without one', async () => {
+    const { token } = await createTestUser();
+
+    const response = await request(app)
+      .post('/api/pets')
+      .set('Authorization', authHeader(token))
+      .send(makePetPayload({ name: 'Luna Belle', species: 'dog' }));
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.publicQrId).toMatch(
+      /^luna-belle-[a-f0-9]{8}$/,
+    );
+  });
+
+  it('rejects duplicate frontend-provided publicQrId values', async () => {
+    const { token } = await createTestUser();
+    const publicQrId = 'shared-qr-123';
+
+    const first = await request(app)
+      .post('/api/pets')
+      .set('Authorization', authHeader(token))
+      .send(makePetPayload({ name: 'First Pet', publicQrId }));
+    const second = await request(app)
+      .post('/api/pets')
+      .set('Authorization', authHeader(token))
+      .send(makePetPayload({ name: 'Second Pet', publicQrId }));
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(409);
+    expect(second.body).toEqual({
+      success: false,
+      message: 'Public QR ID already exists',
+    });
+  });
+
   it('rejects invalid pet data', async () => {
     const { token } = await createTestUser();
 

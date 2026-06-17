@@ -49,6 +49,11 @@ export const getPetById = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, 'Pet fetched successfully', pet);
 });
 
+export const getPublicPetProfile = asyncHandler(async (req, res) => {
+  const pet = await petsService.getPublicPetProfile(req.params.publicQrId);
+  sendSuccess(res, 200, 'Public pet profile loaded.', pet);
+});
+
 export const createPet = asyncHandler(async (req: AuthRequest, res) => {
   const pet = await petsService.createPet({
     ...req.body,

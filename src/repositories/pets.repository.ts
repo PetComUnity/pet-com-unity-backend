@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import { PetModel } from '../models/pet.model';
 import {
   CreatePetInput,
@@ -68,10 +67,15 @@ class PetsRepository {
     return toPet(pet);
   }
 
+  async findByPublicQrId(publicQrId: string): Promise<Pet | undefined> {
+    const pet = await PetModel.findOne({ publicQrId }).lean();
+    if (!pet) return undefined;
+    return toPet(pet);
+  }
+
   async create(payload: CreatePetInput): Promise<Pet> {
     const pet = await PetModel.create({
       ...payload,
-      publicQrId: randomUUID(),
       isLost: payload.isLost ?? false,
       isAdoptable: payload.isAdoptable ?? false,
       verificationStatus: 'unverified',
@@ -82,6 +86,7 @@ class PetsRepository {
   async update(id: string, payload: UpdatePetInput): Promise<Pet | undefined> {
     const pet = await PetModel.findByIdAndUpdate(id, payload, {
       returnDocument: 'after',
+      runValidators: true,
     }).lean();
     if (!pet) return undefined;
     return toPet(pet);
