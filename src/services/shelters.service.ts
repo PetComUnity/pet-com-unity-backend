@@ -1,42 +1,27 @@
 import { Shelter } from "../models/shelter.model"; // Ensure your model path is correct
+import { UserModel } from "../models/user.model";
 
 class SheltersService {
-  /**
-   * =========================
-   * PUBLIC
-   * Get all shelters
-   * =========================
-   */
+
   async getShelters() {
     return Shelter.find().sort({ createdAt: -1 });
   }
 
-  /**
-   * =========================
-   * PUBLIC
-   * Get shelter by ID
-   * =========================
-   */
+
+  //  PUBLIC
+  //  Get shelter by ID
+ 
   async getShelterById(shelterId: string) {
     return Shelter.findById(shelterId);
   }
 
-  /**
-   * =========================
-   * AUTH
-   * Get shelter by logged-in user
-   * =========================
-   */
+
+   
   async getMyShelter(userId: string) {
     return Shelter.findOne({ userId });
   }
 
-  /**
-   * =========================
-   * AUTH
-   * Create shelter for shelter user
-   * =========================
-   */
+
   async createShelter(data: {
     userId: string;
     name: string;
@@ -67,41 +52,48 @@ class SheltersService {
     return Shelter.create(shelterData);
   }
 
-  /**
-   * =========================
-   * AUTH
-   * Update shelter by userId
-   * =========================
-   */
-  async updateMyShelter(userId: string, data: any) {
-    const updateData: any = {};
+ async updateMyShelter(userId: string, data: any) {
+  const updateData: any = {};
 
-    // Filter fields to update
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.email !== undefined) updateData.email = data.email;
-    if (data.website !== undefined) updateData.website = data.website;
-    if (data.registrationNumber !== undefined) updateData.registrationNumber = data.registrationNumber;
-    if (data.phoneNumbers !== undefined) updateData.phoneNumbers = data.phoneNumbers;
-    if (data.location !== undefined) updateData.location = data.location;
-    if (data.workingHours !== undefined) updateData.workingHours = data.workingHours;
-    if (data.socialMediaLinks !== undefined) updateData.socialMediaLinks = data.socialMediaLinks;
+  // Filter fields to update
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.website !== undefined) updateData.website = data.website;
+  if (data.registrationNumber !== undefined)
+    updateData.registrationNumber = data.registrationNumber;
+  if (data.phoneNumbers !== undefined)
+    updateData.phoneNumbers = data.phoneNumbers;
+  if (data.location !== undefined)
+    updateData.location = data.location;
+  if (data.workingHours !== undefined)
+    updateData.workingHours = data.workingHours;
+  if (data.socialMediaLinks !== undefined)
+    updateData.socialMediaLinks = data.socialMediaLinks;
 
-    // Update the document
-    const updatedShelter = await Shelter.findOneAndUpdate(
-      { userId: userId }, 
-      { $set: updateData }, 
-      { returnDocument: 'after', runValidators: true }
-    );
+  // Update shelter collection
+  const updatedShelter = await Shelter.findOneAndUpdate(
+    { userId },
+    { $set: updateData },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
-    return updatedShelter;
+  if (!updatedShelter) {
+    throw new Error("Shelter not found");
   }
 
-  /**
-   * =========================
-   * AUTH
-   * Delete shelter by userId
-   * =========================
-   */
+
+  if (data.name?.trim()) {
+    await UserModel.findByIdAndUpdate(userId, {
+      name: data.name.trim(),
+    });
+  }
+
+  return updatedShelter;
+}
+
   async deleteMyShelter(userId: string) {
     return Shelter.findOneAndDelete({ userId });
   }
