@@ -9,6 +9,7 @@ import {
 } from '../types/pet';
 import { assertCanAccessOwnedResource } from '../utils/access-control';
 import { createAppError } from '../utils/api-response';
+import { deleteCloudinaryAsset } from '../utils/cloudinary';
 import {
   generatePublicQrId,
   isValidPublicQrId,
@@ -154,6 +155,16 @@ class PetsService {
       throw createAppError('Pet not found', 404);
     }
 
+    const imageIsChanging = 'imageFileId' in payload || 'imageUrl' in payload;
+    if (imageIsChanging) {
+      if (existing.imageFileId && existing.imageFileId !== payload.imageFileId) {
+        void deleteCloudinaryAsset(existing.imageFileId);
+      }
+      if (existing.imageUrl && existing.imageUrl !== payload.imageUrl) {
+        void deleteCloudinaryAsset(existing.imageUrl);
+      }
+    }
+
     return pet;
   }
 
@@ -171,6 +182,9 @@ class PetsService {
     if (!pet) {
       throw createAppError('Pet not found', 404);
     }
+
+    if (existing.imageFileId) void deleteCloudinaryAsset(existing.imageFileId);
+    if (existing.imageUrl) void deleteCloudinaryAsset(existing.imageUrl);
 
     return pet;
   }

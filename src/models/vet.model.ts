@@ -24,3 +24,4 @@ const VetSchema = new Schema<IVet>(
 );
 
 export const VetModel = model<IVet>('Vet', VetSchema);
+
