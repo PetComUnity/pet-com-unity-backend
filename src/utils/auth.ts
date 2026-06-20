@@ -4,6 +4,7 @@ import { env } from '../config/env';
 
 export interface JwtUserPayload extends JwtPayload {
   userId: string;
+  role?: string;
 }
 
 export function hashPassword(password: string): Promise<string> {
@@ -19,9 +20,10 @@ export function comparePassword(
 
 export function generateJwtToken(
   userId: string,
+  role?: string,
   secret = env.jwtSecret,
 ): string {
-  return jwt.sign({ userId }, secret, { expiresIn: '7d' });
+  return jwt.sign({ userId, role }, secret, { expiresIn: '7d' });
 }
 
 export function verifyJwtToken(

@@ -11,6 +11,7 @@ export interface IUser extends Document {
   socialMediaLink?: string;
   address?: string;
   avatarFileId?: string;
+  registrationNumber?: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -29,6 +30,8 @@ const UserSchema = new Schema<IUser>(
     socialMediaLink: { type: String },
     address: { type: String },
     avatarFileId: { type: String },
+    registrationNumber: { type: String }
+
   },
   { timestamps: true },
 );

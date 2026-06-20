@@ -4,6 +4,7 @@ import { verifyJwtToken } from '../utils/auth';
 
 export interface AuthRequest extends Request {
   userId?: string;
+  role?: string;
 }
 
 export const authMiddleware = (
@@ -23,6 +24,7 @@ export const authMiddleware = (
   try {
     const payload = verifyJwtToken(token);
     req.userId = payload.userId;
+    req.role = payload.role;
     next();
   } catch {
     res.status(401).json(buildErrorResponse('Invalid or expired token'));

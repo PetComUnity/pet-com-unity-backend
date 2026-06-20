@@ -5,7 +5,17 @@ import { buildErrorResponse } from '../utils/api-response';
 import { hasRole } from '../utils/access-control';
 import type { AuthRequest } from './auth.middleware';
 
-export const requireRole = (allowedRoles: UserRole[]): RequestHandler => {
+type RoleInput = UserRole | UserRole[];
+
+function normalizeAllowedRoles(roles: RoleInput[]): UserRole[] {
+  return roles.flatMap((role) => (Array.isArray(role) ? role : [role]));
+}
+
+export function requireRole(allowedRoles: UserRole[]): RequestHandler;
+export function requireRole(...allowedRoles: UserRole[]): RequestHandler;
+export function requireRole(...roles: RoleInput[]): RequestHandler {
+  const allowedRoles = normalizeAllowedRoles(roles);
+
   return async (req, res, next) => {
     const authReq = req as AuthRequest;
 
@@ -34,4 +44,4 @@ export const requireRole = (allowedRoles: UserRole[]): RequestHandler => {
       next(error);
     }
   };
-};
+}

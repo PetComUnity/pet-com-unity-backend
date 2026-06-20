@@ -26,6 +26,7 @@ export interface RegisterUserInput {
   website?: string;
   socialMediaLink?: string;
   address?: string;
+  registrationNumber?: string;
 }
 
 export interface LoginUserInput {
