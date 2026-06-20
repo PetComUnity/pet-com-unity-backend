@@ -12,6 +12,8 @@ import {
 import { createAppError } from '../utils/api-response';
 import { comparePassword, generateJwtToken, hashPassword } from '../utils/auth';
 
+import { deleteCloudinaryAsset } from '../utils/cloudinary';
+
 interface CurrentUserResult {
   user: UserPublic;
   organization: unknown | null;
@@ -166,6 +168,8 @@ class AuthService {
       }
     }
 
+    const before = await UserModel.findById(userId).lean();
+
     const user = await UserModel.findByIdAndUpdate(userId, payload, {
       returnDocument: 'after',
       runValidators: true,
@@ -173,6 +177,14 @@ class AuthService {
 
     if (!user) {
       throw createAppError('User not found', 404);
+    }
+
+    if (
+      before?.avatarFileId &&
+      'avatarFileId' in payload &&
+      before.avatarFileId !== payload.avatarFileId
+    ) {
+      void deleteCloudinaryAsset(before.avatarFileId);
     }
 
     return toUserPublic(user);
