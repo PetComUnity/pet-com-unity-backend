@@ -96,7 +96,7 @@ export const getPrivateFileController = asyncHandler(async (req: AuthRequest, re
     return;
   }
 
-  if (pet && pet.ownerId !== userId && !pet.isAdoptable && !user) {
+  if (pet && pet.ownerId !== userId && !pet.isAdoptable && !pet.isLost && !user) {
     res.status(403).json({ success: false, message: 'Access denied' });
     return;
   }
