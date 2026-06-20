@@ -1,4 +1,15 @@
 import { z } from 'zod';
+import { PUBLIC_QR_ID_PATTERN } from '../utils/public-qr-id';
+
+const publicQrIdSchema = z
+  .string()
+  .trim()
+  .min(3, 'Public QR ID must be at least 3 characters')
+  .max(80, 'Public QR ID is too long')
+  .regex(
+    PUBLIC_QR_ID_PATTERN,
+    'Public QR ID must use lowercase letters, numbers, and hyphens only',
+  );
 
 export const createPetSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
@@ -16,6 +27,7 @@ export const createPetSchema = z.object({
   microchipId: z.string().optional(),
   isLost: z.boolean().optional(),
   isAdoptable: z.boolean().optional(),
+  publicQrId: publicQrIdSchema.optional(),
 });
 
 export const updatePetSchema = createPetSchema.partial();

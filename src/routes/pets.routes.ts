@@ -4,6 +4,7 @@ import {
   deletePet,
   getPetById,
   getPets,
+  getPublicPetProfile,
   updatePet,
 } from '../controllers/pets.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
@@ -14,6 +15,7 @@ import petDocumentsRoutes from './petDocuments.routes';
 const router = Router();
 
 router.get('/', getPets);
+router.get('/public/:publicQrId', getPublicPetProfile);
 router.get('/:id', getPetById);
 router.post('/', authMiddleware, validateSchema(createPetSchema), createPet);
 router.put('/:id', authMiddleware, validateSchema(updatePetSchema), updatePet);

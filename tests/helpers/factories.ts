@@ -64,8 +64,16 @@ export function makePetPayload(
     weight: number;
     location: string;
     gender: 'male' | 'female' | 'unknown';
+    birthDate: string;
+    color: string;
+    themeColor: string;
+    description: string;
+    imageUrl: string;
+    imageFileId: string;
+    microchipId: string;
     isAdoptable: boolean;
     isLost: boolean;
+    publicQrId: string;
   }> = {},
 ) {
   return {
@@ -77,18 +85,44 @@ export function makePetPayload(
     gender: overrides.gender ?? 'female',
     isAdoptable: overrides.isAdoptable ?? false,
     isLost: overrides.isLost ?? false,
+    ...(overrides.birthDate !== undefined
+      ? { birthDate: overrides.birthDate }
+      : {}),
+    ...(overrides.color !== undefined ? { color: overrides.color } : {}),
+    ...(overrides.themeColor !== undefined
+      ? { themeColor: overrides.themeColor }
+      : {}),
+    ...(overrides.description !== undefined
+      ? { description: overrides.description }
+      : {}),
+    ...(overrides.imageUrl !== undefined
+      ? { imageUrl: overrides.imageUrl }
+      : {}),
+    ...(overrides.imageFileId !== undefined
+      ? { imageFileId: overrides.imageFileId }
+      : {}),
+    ...(overrides.microchipId !== undefined
+      ? { microchipId: overrides.microchipId }
+      : {}),
+    ...(overrides.publicQrId !== undefined
+      ? { publicQrId: overrides.publicQrId }
+      : {}),
   };
 }
 
 export async function createTestPet(
   ownerId: string,
-  overrides: Partial<ReturnType<typeof makePetPayload>> = {},
+  overrides: Partial<ReturnType<typeof makePetPayload>> & {
+    verificationStatus?: 'unverified' | 'verified';
+  } = {},
 ) {
+  const payload = makePetPayload(overrides);
+
   return PetModel.create({
-    ...makePetPayload(overrides),
+    ...payload,
     ownerId,
-    publicQrId: randomUUID(),
-    verificationStatus: 'unverified',
+    publicQrId: payload.publicQrId ?? randomUUID(),
+    verificationStatus: overrides.verificationStatus ?? 'unverified',
   });
 }
 
