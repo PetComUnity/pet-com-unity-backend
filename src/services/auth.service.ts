@@ -1,3 +1,5 @@
+import { Clinic } from '../models/clinic.model';
+import { Shelter } from '../models/shelter.model';
 import { UserModel } from '../models/user.model';
 import {
   AuthResult,
@@ -7,13 +9,28 @@ import {
   UpdateCurrentUserInput,
   UserPublic,
 } from '../types/user';
-import { comparePassword, generateJwtToken, hashPassword } from '../utils/auth';
 import { createAppError } from '../utils/api-response';
+import { comparePassword, generateJwtToken, hashPassword } from '../utils/auth';
+
 import { deleteCloudinaryAsset } from '../utils/cloudinary';
+
+interface CurrentUserResult {
+  user: UserPublic;
+  organization: unknown | null;
+}
 
 function toUserPublic(doc: any): UserPublic {
   const { _id, __v, passwordHash, ...rest } = doc;
   return { ...rest, id: _id.toString() };
+}
+
+function normalizeRegistrationNumber(value: unknown): string | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  const registrationNumber = String(value).trim();
+  return registrationNumber.length > 0 ? registrationNumber : undefined;
 }
 
 class AuthService {
@@ -38,8 +55,31 @@ class AuthService {
       address: payload.address,
     });
 
+    const registrationNumber = normalizeRegistrationNumber(
+      payload.registrationNumber,
+    );
+    const organizationPayload = {
+      userId: user._id,
+      name: payload.name,
+      email: payload.email,
+      website: payload.website ?? '',
+      ...(registrationNumber ? { registrationNumber } : {}),
+      phoneNumbers: payload.phone ? [payload.phone] : [],
+      location: payload.address ?? payload.city ?? '',
+      socialMediaLinks: [],
+      verified: false,
+    };
+
+    if (payload.role === 'vet') {
+      await Clinic.create(organizationPayload);
+    }
+
+    if (payload.role === 'shelter') {
+      await Shelter.create(organizationPayload);
+    }
+
     const userPublic = toUserPublic(user.toObject());
-    const token = generateJwtToken(userPublic.id);
+    const token = generateJwtToken(userPublic.id, userPublic.role);
 
     return { user: userPublic, token };
   }
@@ -61,19 +101,32 @@ class AuthService {
     }
 
     const userPublic = toUserPublic(user);
-    const token = generateJwtToken(userPublic.id);
+    const token = generateJwtToken(userPublic.id, userPublic.role);
 
     return { user: userPublic, token };
   }
 
-  async getCurrentUser(userId: string): Promise<UserPublic> {
+  async getCurrentUser(userId: string): Promise<CurrentUserResult> {
     const user = await UserModel.findById(userId).lean();
 
     if (!user) {
       throw createAppError('User not found', 404);
     }
 
-    return toUserPublic(user);
+    let organization = null;
+
+    if (user.role === 'vet') {
+      organization = await Clinic.findOne({ userId }).lean();
+    }
+
+    if (user.role === 'shelter') {
+      organization = await Shelter.findOne({ userId }).lean();
+    }
+
+    return {
+      user: toUserPublic(user),
+      organization,
+    };
   }
 
   async changePassword(

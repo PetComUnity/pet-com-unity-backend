@@ -29,7 +29,7 @@ const WorkingHoursSchema = new Schema(
   { _id: false }
 );
 
-const ShelterSchema = new Schema(
+const ClinicSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -38,16 +38,8 @@ const ShelterSchema = new Schema(
       unique: true,
     },
 
-    name: {
-      type: String,
-      required: true,
-    },
-
-    email: {
-      type: String,
-      default: null,
-    },
-    
+    name: { type: String, required: true },
+    email: { type: String, default: null },
     phoneNumbers: {
       type: [String],
       default: [],
@@ -56,18 +48,13 @@ const ShelterSchema = new Schema(
       type: String,
       default: null,
     },
-
     registrationNumber: {
-      type: String,
-      default: null,
-      sparse: true,
-      trim: true,
+        type: String,
+        default: null,
+        sparse: true,
+        trim: true,
     },
-
-    location: {
-      type: String,
-      default: null,
-    },
+    location: { type: String, default: null },
 
     workingHours: {
       type: WorkingHoursSchema,
@@ -82,23 +69,15 @@ const ShelterSchema = new Schema(
       }),
     },
 
-    socialMediaLinks: {
-      type: [SocialLinkSchema],
-      default: [],
-    },
+    socialMediaLinks: { type: [SocialLinkSchema], default: [] },
 
-    verified: {
-      type: Boolean,
-      default: false,
-    },
+    verified: { type: Boolean, default: false },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-export const Shelter =
-  models.Shelter ||
-  model("Shelter", ShelterSchema);
+if (models.Clinic) {
+  delete models.Clinic;
+} 
 
-export const ShelterModel = Shelter;
+export const Clinic = models.Clinic || model("Clinic", ClinicSchema);

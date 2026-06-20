@@ -37,6 +37,12 @@ export const registerSchema = z.object({
     .optional(),
 
   address: z.string().max(250, 'Address is too long').optional(),
+
+  registrationNumber: z
+    .string()
+    .trim()
+    .max(100, 'Registration number is too long')
+    .optional(),
 });
 
 export const loginSchema = z.object({
