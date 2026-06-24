@@ -42,14 +42,15 @@ describe('password utilities', () => {
 
 describe('JWT utilities', () => {
   it('generates and verifies a user token', () => {
-    const token = generateJwtToken('user-123', 'unit-secret');
+    const token = generateJwtToken('user-123', 'owner', 'unit-secret');
     const payload = verifyJwtToken(token, 'unit-secret');
 
     expect(payload.userId).toBe('user-123');
+    expect(payload.role).toBe('owner');
   });
 
   it('rejects tokens signed with a different secret', () => {
-    const token = generateJwtToken('user-123', 'unit-secret');
+    const token = generateJwtToken('user-123', undefined, 'unit-secret');
 
     expect(() => verifyJwtToken(token, 'other-secret')).toThrow();
   });

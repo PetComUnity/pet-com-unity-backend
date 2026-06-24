@@ -5,7 +5,7 @@
     "lib": ["ES2020"],
     "rootDir": "src",
     "outDir": "dist",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
