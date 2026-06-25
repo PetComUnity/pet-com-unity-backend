@@ -55,11 +55,15 @@ function proxyDownload(downloadUrl: string, res: Response): void {
 
 export const getPrivateFileController = asyncHandler(async (req: AuthRequest, res) => {
   const { fileId } = req.params;
-  const userId = req.userId!;
+  const userId = req.userId;
 
   const publicId = fileId.replace(/--/g, '/');
 
   if (publicId.startsWith('documents/')) {
+    if (!userId) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
     const doc = await PetDocumentModel.findOne({ fileId: publicId });
     if (!doc) {
       res.status(404).json({ success: false, message: 'File not found' });
@@ -88,7 +92,7 @@ export const getPrivateFileController = asyncHandler(async (req: AuthRequest, re
 
   const [pet, user] = await Promise.all([
     PetModel.findOne({ imageFileId: publicId }).lean(),
-    UserModel.findOne({ _id: userId, avatarFileId: publicId }).lean(),
+    userId ? UserModel.findOne({ _id: userId, avatarFileId: publicId }).lean() : Promise.resolve(null),
   ]);
 
   if (!pet && !user) {
@@ -96,8 +100,15 @@ export const getPrivateFileController = asyncHandler(async (req: AuthRequest, re
     return;
   }
 
-  if (pet && pet.ownerId !== userId && !pet.isAdoptable && !pet.isLost && !user) {
-    res.status(403).json({ success: false, message: 'Access denied' });
+  if (pet) {
+    const isPublicPet = pet.isAdoptable || pet.isLost;
+    const isOwner = userId && pet.ownerId === userId;
+    if (!isPublicPet && !isOwner && !user) {
+      res.status(403).json({ success: false, message: 'Access denied' });
+      return;
+    }
+  } else if (!userId) {
+    res.status(401).json({ success: false, message: 'Authentication required' });
     return;
   }
 
