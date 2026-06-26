@@ -69,14 +69,20 @@ const updateCurrentUserFieldsSchema = registerSchema
   .pick({
     name: true,
     email: true,
-    phone: true,
     city: true,
     website: true,
     socialMediaLink: true,
     address: true,
   })
   .extend({
-    avatarFileId: z.string().min(1, 'Avatar file id is required').optional(),
+    phone: z
+      .string()
+      .refine((v) => v === '' || /^\+?[\d\s\-()]{7,15}$/.test(v), {
+        message: 'Invalid phone number format',
+      })
+      .optional(),
+    avatarFileId: z.string().min(1).nullable().optional(),
+    avatarUrl: z.string().url().nullable().optional(),
   });
 
 export const updateCurrentUserSchema = updateCurrentUserFieldsSchema

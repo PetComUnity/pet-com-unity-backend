@@ -7,6 +7,27 @@ export interface AuthRequest extends Request {
   role?: string;
 }
 
+export const optionalAuthMiddleware = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void => {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const payload = verifyJwtToken(token);
+      req.userId = payload.userId;
+      req.role = payload.role;
+    } catch {
+      // invalid token — treat as unauthenticated
+    }
+  }
+
+  next();
+};
+
 export const authMiddleware = (
   req: AuthRequest,
   res: Response,

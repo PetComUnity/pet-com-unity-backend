@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middlewares/auth.middleware';
+import { optionalAuthMiddleware } from '../middlewares/auth.middleware';
 import { getPrivateFileController } from '../controllers/files.controller';
 
 const router = Router();
 
-router.get('/:fileId', authMiddleware, getPrivateFileController);
+router.get('/:fileId', optionalAuthMiddleware, getPrivateFileController);
 
 export default router;
