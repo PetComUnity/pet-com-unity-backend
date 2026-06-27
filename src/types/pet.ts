@@ -1,5 +1,9 @@
 export type PetGender = 'male' | 'female' | 'unknown';
-export type PetVerificationStatus = 'unverified' | 'verified';
+export type PetVerificationStatus =
+  | 'unverified'
+  | 'pending'
+  | 'verified'
+  | 'rejected';
 export type PetSize = 'S' | 'M' | 'L';
 
 export interface Pet {
@@ -12,17 +16,23 @@ export interface Pet {
   location?: string;
   gender?: PetGender;
   birthDate?: string;
+  dateOfBirth?: string;
   color?: string;
   themeColor?: string;
   description?: string;
   imageUrl?: string;
   imageFileId?: string;
   microchipId?: string;
+  passportNumber?: string;
   isLost: boolean;
   isAdoptable: boolean;
   verificationStatus: PetVerificationStatus;
-  verifiedBy?: string;
-  verifiedAt?: Date;
+  verifiedBy?: string | null;
+  verifiedByName?: string | null;
+  verifiedClinicId?: string | null;
+  verifiedClinicName?: string | null;
+  verifiedAt?: Date | null;
+  verificationNote?: string | null;
   publicQrId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -33,6 +43,7 @@ export interface PublicPetProfile {
   species: string;
   breed?: string;
   birthDate?: string;
+  dateOfBirth?: string;
   color?: string;
   gender?: PetGender;
   description?: string;
@@ -66,12 +77,14 @@ export interface CreatePetInput {
   location?: string;
   gender?: PetGender;
   birthDate?: string;
+  dateOfBirth?: string;
   color?: string;
   themeColor?: string;
   description?: string;
   imageUrl?: string;
   imageFileId?: string;
   microchipId?: string;
+  passportNumber?: string;
   isLost?: boolean;
   isAdoptable?: boolean;
   publicQrId?: string;

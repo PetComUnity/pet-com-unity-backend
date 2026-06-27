@@ -72,15 +72,67 @@ const options: swaggerJsdoc.Options = {
             description: { type: 'string', nullable: true },
             imageUrl: { type: 'string', nullable: true },
             microchipId: { type: 'string', nullable: true },
+            passportNumber: { type: 'string', nullable: true },
             isLost: { type: 'boolean' },
             isAdoptable: { type: 'boolean' },
             verificationStatus: {
               type: 'string',
-              enum: ['unverified', 'verified'],
+              enum: ['unverified', 'pending', 'verified', 'rejected'],
             },
+            verifiedBy: { type: 'string', nullable: true },
+            verifiedByName: { type: 'string', nullable: true },
+            verifiedClinicId: { type: 'string', nullable: true },
+            verifiedClinicName: { type: 'string', nullable: true },
+            verifiedAt: { type: 'string', format: 'date-time', nullable: true },
+            verificationNote: { type: 'string', nullable: true },
             publicQrId: { type: 'string' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        PetVerificationLookup: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            species: { type: 'string' },
+            breed: { type: 'string', nullable: true },
+            gender: {
+              type: 'string',
+              enum: ['male', 'female', 'unknown'],
+              nullable: true,
+            },
+            dateOfBirth: { type: 'string', nullable: true },
+            imageUrl: { type: 'string', nullable: true },
+            microchipId: { type: 'string' },
+            passportNumber: { type: 'string', nullable: true },
+            verificationStatus: {
+              type: 'string',
+              enum: ['unverified', 'pending', 'verified', 'rejected'],
+            },
+            verifiedAt: { type: 'string', format: 'date-time', nullable: true },
+            verifiedClinicName: { type: 'string', nullable: true },
+          },
+        },
+        PetVerificationRecord: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            petId: { type: 'string' },
+            clinicId: { type: 'string', nullable: true },
+            clinicName: { type: 'string', nullable: true },
+            doctorId: { type: 'string' },
+            doctorName: { type: 'string', nullable: true },
+            microchipId: { type: 'string' },
+            result: {
+              type: 'string',
+              enum: ['verified', 'pending', 'rejected'],
+            },
+            microchipMatched: { type: 'boolean' },
+            passportMatched: { type: 'boolean' },
+            visualCheckPassed: { type: 'boolean' },
+            note: { type: 'string', nullable: true },
+            createdAt: { type: 'string', format: 'date-time' },
           },
         },
         PaginationMeta: {
@@ -155,13 +207,24 @@ const options: swaggerJsdoc.Options = {
             date: { type: 'string', format: 'date-time' },
             eventType: {
               type: 'string',
-              enum: ['vaccination', 'vet_visit', 'checkup', 'grooming', 'medication', 'other'],
+              enum: [
+                'vaccination',
+                'vet_visit',
+                'checkup',
+                'grooming',
+                'medication',
+                'other',
+              ],
               example: 'vaccination',
             },
             description: { type: 'string', nullable: true },
             startTime: { type: 'string', example: '10:00', nullable: true },
             endTime: { type: 'string', example: '10:30', nullable: true },
-            location: { type: 'string', example: 'Клініка Добрий лікар, Київ', nullable: true },
+            location: {
+              type: 'string',
+              example: 'Клініка Добрий лікар, Київ',
+              nullable: true,
+            },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
           },
@@ -169,6 +232,158 @@ const options: swaggerJsdoc.Options = {
       },
     },
     paths: {
+      '/clinics/pets/lookup': {
+        get: {
+          tags: ['Clinics'],
+          summary: 'Look up a pet by microchip number for clinic verification',
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              in: 'query',
+              name: 'microchipId',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'Pet verification lookup loaded',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: { type: 'string' },
+                      data: {
+                        $ref: '#/components/schemas/PetVerificationLookup',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            400: { description: 'Invalid or missing microchip number' },
+            401: { description: 'Unauthorized' },
+            403: { description: 'Forbidden' },
+            404: { description: 'Pet not found' },
+          },
+        },
+      },
+      '/clinics/pets/{petId}/verify': {
+        post: {
+          tags: ['Clinics'],
+          summary: 'Submit a clinic pet verification decision',
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              in: 'path',
+              name: 'petId',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: [
+                    'microchipId',
+                    'result',
+                    'microchipMatched',
+                    'passportMatched',
+                    'visualCheckPassed',
+                  ],
+                  properties: {
+                    microchipId: { type: 'string' },
+                    result: {
+                      type: 'string',
+                      enum: ['verified', 'pending', 'rejected'],
+                    },
+                    microchipMatched: { type: 'boolean' },
+                    passportMatched: { type: 'boolean' },
+                    visualCheckPassed: { type: 'boolean' },
+                    note: { type: 'string', maxLength: 1000 },
+                    doctorId: { type: 'string' },
+                    doctorName: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            201: {
+              description: 'Pet verification recorded successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: { type: 'string' },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          pet: { $ref: '#/components/schemas/Pet' },
+                          verificationRecord: {
+                            $ref: '#/components/schemas/PetVerificationRecord',
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            400: { description: 'Invalid verification decision' },
+            401: { description: 'Unauthorized' },
+            403: { description: 'Forbidden' },
+            404: { description: 'Pet not found' },
+          },
+        },
+      },
+      '/clinics/pets/{petId}/verifications': {
+        get: {
+          tags: ['Clinics'],
+          summary: 'Get clinic verification history for a pet',
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              in: 'path',
+              name: 'petId',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'Pet verification history fetched successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      message: { type: 'string' },
+                      data: {
+                        type: 'array',
+                        items: {
+                          $ref: '#/components/schemas/PetVerificationRecord',
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            401: { description: 'Unauthorized' },
+            403: { description: 'Forbidden' },
+            404: { description: 'Pet not found' },
+          },
+        },
+      },
       '/auth/register': {
         post: {
           tags: ['Auth'],
@@ -393,7 +608,10 @@ const options: swaggerJsdoc.Options = {
                       type: 'string',
                       example: 'Khreshchatyk St 1, Kyiv',
                     },
-                    avatarFileId: { type: 'string', example: 'pet-avatars/private/spro3cgp5loh0jmjk26g' },
+                    avatarFileId: {
+                      type: 'string',
+                      example: 'pet-avatars/private/spro3cgp5loh0jmjk26g',
+                    },
                   },
                 },
               },
@@ -530,7 +748,8 @@ const options: swaggerJsdoc.Options = {
               name: 'isLost',
               in: 'query',
               required: false,
-              description: 'Filter pets by lost status. Use true to list lost pets.',
+              description:
+                'Filter pets by lost status. Use true to list lost pets.',
               schema: { type: 'boolean' },
             },
             {
@@ -631,7 +850,8 @@ const options: swaggerJsdoc.Options = {
               name: 'isLost',
               in: 'query',
               required: false,
-              description: 'Filter pets by lost status. Use true to list lost pets.',
+              description:
+                'Filter pets by lost status. Use true to list lost pets.',
               schema: { type: 'boolean' },
             },
             {
@@ -915,7 +1135,12 @@ const options: swaggerJsdoc.Options = {
               in: 'query',
               required: false,
               description: 'Year (2000–2100)',
-              schema: { type: 'integer', minimum: 2000, maximum: 2100, example: 2026 },
+              schema: {
+                type: 'integer',
+                minimum: 2000,
+                maximum: 2100,
+                example: 2026,
+              },
             },
             {
               name: 'petId',
@@ -934,7 +1159,10 @@ const options: swaggerJsdoc.Options = {
                     type: 'object',
                     properties: {
                       success: { type: 'boolean', example: true },
-                      message: { type: 'string', example: 'Calendar events fetched successfully' },
+                      message: {
+                        type: 'string',
+                        example: 'Calendar events fetched successfully',
+                      },
                       data: {
                         type: 'array',
                         items: { $ref: '#/components/schemas/CalendarEvent' },
@@ -966,17 +1194,30 @@ const options: swaggerJsdoc.Options = {
                   type: 'object',
                   required: ['petId', 'title', 'date'],
                   properties: {
-                    petId: { type: 'string', example: '664f1a2b3c4d5e6f7a8b9c0e' },
+                    petId: {
+                      type: 'string',
+                      example: '664f1a2b3c4d5e6f7a8b9c0e',
+                    },
                     title: { type: 'string', example: 'Щорічне щеплення' },
                     date: { type: 'string', format: 'date-time' },
                     eventType: {
                       type: 'string',
-                      enum: ['vaccination', 'vet_visit', 'checkup', 'grooming', 'medication', 'other'],
+                      enum: [
+                        'vaccination',
+                        'vet_visit',
+                        'checkup',
+                        'grooming',
+                        'medication',
+                        'other',
+                      ],
                     },
                     description: { type: 'string' },
                     startTime: { type: 'string', example: '10:00' },
                     endTime: { type: 'string', example: '10:30' },
-                    location: { type: 'string', example: 'Клініка Добрий лікар, Київ' },
+                    location: {
+                      type: 'string',
+                      example: 'Клініка Добрий лікар, Київ',
+                    },
                     vetId: { type: 'string' },
                   },
                 },
@@ -992,7 +1233,10 @@ const options: swaggerJsdoc.Options = {
                     type: 'object',
                     properties: {
                       success: { type: 'boolean', example: true },
-                      message: { type: 'string', example: 'Calendar event created successfully' },
+                      message: {
+                        type: 'string',
+                        example: 'Calendar event created successfully',
+                      },
                       data: { $ref: '#/components/schemas/CalendarEvent' },
                     },
                   },
@@ -1042,7 +1286,14 @@ const options: swaggerJsdoc.Options = {
                     date: { type: 'string', format: 'date-time' },
                     eventType: {
                       type: 'string',
-                      enum: ['vaccination', 'vet_visit', 'checkup', 'grooming', 'medication', 'other'],
+                      enum: [
+                        'vaccination',
+                        'vet_visit',
+                        'checkup',
+                        'grooming',
+                        'medication',
+                        'other',
+                      ],
                     },
                     description: { type: 'string' },
                     startTime: { type: 'string' },
@@ -1062,7 +1313,10 @@ const options: swaggerJsdoc.Options = {
                     type: 'object',
                     properties: {
                       success: { type: 'boolean', example: true },
-                      message: { type: 'string', example: 'Calendar event updated successfully' },
+                      message: {
+                        type: 'string',
+                        example: 'Calendar event updated successfully',
+                      },
                       data: { $ref: '#/components/schemas/CalendarEvent' },
                     },
                   },

@@ -3,6 +3,8 @@ import { Readable } from 'stream';
 import request from 'supertest';
 import app from '../../src/app';
 import { PetDocumentModel } from '../../src/models/petDocument.model';
+import { PetModel } from '../../src/models/pet.model';
+import { VerificationRecordModel } from '../../src/models/verificationRecord.model';
 import { mockCloudinary } from '../mocks/cloudinary.mock';
 import {
   authHeader,
@@ -293,9 +295,7 @@ describe('pets API', () => {
       .send(makePetPayload({ name: 'Luna Belle', species: 'dog' }));
 
     expect(response.status).toBe(201);
-    expect(response.body.data.publicQrId).toMatch(
-      /^luna-belle-[a-f0-9]{8}$/,
-    );
+    expect(response.body.data.publicQrId).toMatch(/^luna-belle-[a-f0-9]{8}$/);
   });
 
   it('rejects duplicate frontend-provided publicQrId values', async () => {
@@ -412,6 +412,266 @@ describe('role-based access API', () => {
 
     expect(denied.status).toBe(403);
     expect(allowed.status).toBe(201);
+  });
+});
+
+describe('clinic pet verification API', () => {
+  it('allows a vet to search a pet by microchip number', async () => {
+    const owner = await createTestUser();
+    const vet = await createTestUser({ role: 'vet' });
+    const pet = await createTestPet(owner.user.id, {
+      name: 'Verified Candidate',
+      species: 'dog',
+      breed: 'mixed',
+      gender: 'female',
+      birthDate: '2022-04-12',
+      microchipId: '123456789',
+      passportNumber: 'MK-PASS-1',
+      imageUrl: 'https://images.example.com/pet.jpg',
+    });
+
+    const response = await request(app)
+      .get('/api/clinics/pets/lookup?microchipId=123456789')
+      .set('Authorization', authHeader(vet.token));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toMatchObject({
+      id: pet.id,
+      name: 'Verified Candidate',
+      species: 'dog',
+      breed: 'mixed',
+      gender: 'female',
+      dateOfBirth: '2022-04-12',
+      imageUrl: 'https://images.example.com/pet.jpg',
+      microchipId: '123456789',
+      passportNumber: 'MK-PASS-1',
+      verificationStatus: 'unverified',
+    });
+  });
+
+  it('returns 404 when a microchip lookup has no matching pet', async () => {
+    const vet = await createTestUser({ role: 'vet' });
+
+    const response = await request(app)
+      .get('/api/clinics/pets/lookup?microchipId=unknown-chip')
+      .set('Authorization', authHeader(vet.token));
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Pet not found');
+  });
+
+  it('requires JWT authentication for pet lookup', async () => {
+    const response = await request(app).get(
+      '/api/clinics/pets/lookup?microchipId=123456789',
+    );
+
+    expect(response.status).toBe(401);
+  });
+
+  it('denies owner role access to pet verification', async () => {
+    const owner = await createTestUser({ role: 'owner' });
+    const pet = await createTestPet(owner.user.id, {
+      microchipId: 'owner-denied-chip',
+    });
+
+    const response = await request(app)
+      .post(`/api/clinics/pets/${pet.id}/verify`)
+      .set('Authorization', authHeader(owner.token))
+      .send({
+        microchipId: 'owner-denied-chip',
+        result: 'verified',
+        microchipMatched: true,
+        passportMatched: true,
+        visualCheckPassed: true,
+      });
+
+    expect(response.status).toBe(403);
+  });
+
+  it('allows a vet to verify a pet when all checks pass', async () => {
+    const owner = await createTestUser();
+    const vet = await createTestUser({ role: 'vet', name: 'Dr. Ana' });
+    const pet = await createTestPet(owner.user.id, {
+      microchipId: 'verify-chip-1',
+      passportNumber: 'PASS-1',
+    });
+
+    const response = await request(app)
+      .post(`/api/clinics/pets/${pet.id}/verify`)
+      .set('Authorization', authHeader(vet.token))
+      .send({
+        microchipId: 'verify-chip-1',
+        result: 'verified',
+        microchipMatched: true,
+        passportMatched: true,
+        visualCheckPassed: true,
+        note: 'Microchip and passport match the digital profile.',
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.pet).toMatchObject({
+      id: pet.id,
+      verificationStatus: 'verified',
+      verifiedBy: vet.user.id,
+      verifiedByName: 'Dr. Ana',
+      verificationNote: 'Microchip and passport match the digital profile.',
+    });
+    expect(response.body.data.verificationRecord).toMatchObject({
+      petId: pet.id,
+      doctorId: vet.user.id,
+      doctorName: 'Dr. Ana',
+      microchipId: 'verify-chip-1',
+      result: 'verified',
+      microchipMatched: true,
+      passportMatched: true,
+      visualCheckPassed: true,
+    });
+  });
+
+  it('rejects verified result when the provided microchip does not match', async () => {
+    const owner = await createTestUser();
+    const vet = await createTestUser({ role: 'vet' });
+    const pet = await createTestPet(owner.user.id, {
+      microchipId: 'right-chip',
+    });
+
+    const response = await request(app)
+      .post(`/api/clinics/pets/${pet.id}/verify`)
+      .set('Authorization', authHeader(vet.token))
+      .send({
+        microchipId: 'wrong-chip',
+        result: 'verified',
+        microchipMatched: true,
+        passportMatched: true,
+        visualCheckPassed: true,
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      'Microchip number does not match the pet profile',
+    );
+    expect(
+      await VerificationRecordModel.countDocuments({ petId: pet.id }),
+    ).toBe(0);
+  });
+
+  it('records rejected verification and updates the pet status', async () => {
+    const owner = await createTestUser();
+    const vet = await createTestUser({ role: 'vet' });
+    const pet = await createTestPet(owner.user.id, {
+      microchipId: 'expected-chip',
+    });
+
+    const response = await request(app)
+      .post(`/api/clinics/pets/${pet.id}/verify`)
+      .set('Authorization', authHeader(vet.token))
+      .send({
+        microchipId: 'wrong-chip',
+        result: 'rejected',
+        microchipMatched: false,
+        passportMatched: false,
+        visualCheckPassed: true,
+        note: 'Microchip does not match the digital profile.',
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.pet.verificationStatus).toBe('rejected');
+    expect(response.body.data.verificationRecord).toMatchObject({
+      petId: pet.id,
+      result: 'rejected',
+      microchipId: 'wrong-chip',
+      microchipMatched: false,
+      passportMatched: false,
+      visualCheckPassed: true,
+    });
+    expect(
+      await VerificationRecordModel.countDocuments({ petId: pet.id }),
+    ).toBe(1);
+  });
+
+  it('resets verified pet status to pending when identity fields change', async () => {
+    const owner = await createTestUser();
+    const pet = await createTestPet(owner.user.id, {
+      microchipId: 'stable-chip',
+      passportNumber: 'PASS-OLD',
+      verificationStatus: 'verified',
+    });
+
+    const response = await request(app)
+      .put(`/api/pets/${pet.id}`)
+      .set('Authorization', authHeader(owner.token))
+      .send({ passportNumber: 'PASS-NEW' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.verificationStatus).toBe('pending');
+    expect(response.body.data.verificationNote).toBe(
+      'Identity fields changed after verification; verification reset to pending.',
+    );
+  });
+
+  it('does not leak sensitive fields in the microchip lookup response', async () => {
+    const owner = await createTestUser();
+    const vet = await createTestUser({ role: 'vet' });
+    await createTestPet(owner.user.id, {
+      name: 'Private Lookup Pet',
+      microchipId: 'private-chip',
+      passportNumber: 'PRIVATE-PASS',
+      imageFileId: 'pet-avatars/private/private-file',
+      imageUrl:
+        'https://res.cloudinary.com/test-cloud/image/upload/v1/pet-avatars/private/private-file.jpg',
+    });
+
+    const response = await request(app)
+      .get('/api/clinics/pets/lookup?microchipId=private-chip')
+      .set('Authorization', authHeader(vet.token));
+
+    expect(response.status).toBe(200);
+    for (const field of [
+      '_id',
+      'ownerId',
+      'owner',
+      'ownerEmail',
+      'ownerPhone',
+      'passwordHash',
+      'imageFileId',
+      'documents',
+      'medicalFiles',
+    ]) {
+      expect(response.body.data).not.toHaveProperty(field);
+    }
+    expect(response.body.data).not.toHaveProperty('imageUrl');
+    expect(JSON.stringify(response.body.data)).not.toContain('private-file');
+  });
+
+  it('returns verification history for a pet', async () => {
+    const owner = await createTestUser();
+    const vet = await createTestUser({ role: 'vet' });
+    const pet = await createTestPet(owner.user.id, {
+      microchipId: 'history-chip',
+    });
+
+    await request(app)
+      .post(`/api/clinics/pets/${pet.id}/verify`)
+      .set('Authorization', authHeader(vet.token))
+      .send({
+        microchipId: 'history-chip',
+        result: 'pending',
+        microchipMatched: true,
+        passportMatched: false,
+        visualCheckPassed: true,
+      });
+
+    const response = await request(app)
+      .get(`/api/clinics/pets/${pet.id}/verifications`)
+      .set('Authorization', authHeader(vet.token));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0]).toMatchObject({
+      petId: pet.id,
+      result: 'pending',
+      microchipId: 'history-chip',
+    });
   });
 });
 

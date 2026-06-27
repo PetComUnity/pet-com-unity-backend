@@ -1,10 +1,11 @@
 import { Document, Schema, model } from 'mongoose';
-import {
-  generatePublicQrId,
-  isValidPublicQrId,
-} from '../utils/public-qr-id';
+import { generatePublicQrId, isValidPublicQrId } from '../utils/public-qr-id';
 
-export type PetVerificationStatus = 'unverified' | 'verified';
+export type PetVerificationStatus =
+  | 'unverified'
+  | 'pending'
+  | 'verified'
+  | 'rejected';
 export type PetGender = 'male' | 'female' | 'unknown';
 
 export interface IPet extends Document {
@@ -22,11 +23,17 @@ export interface IPet extends Document {
   imageUrl?: string;
   imageFileId?: string;
   microchipId?: string;
+  microchipNumber?: string;
+  passportNumber?: string;
   isLost: boolean;
   isAdoptable: boolean;
   verificationStatus: PetVerificationStatus;
-  verifiedBy?: string;
+  verifiedBy?: string | null;
+  verifiedByName?: string | null;
+  verifiedClinicId?: string | null;
+  verifiedClinicName?: string | null;
   verifiedAt?: Date | null;
+  verificationNote?: string | null;
   publicQrId: string;
 }
 
@@ -49,15 +56,21 @@ const PetSchema = new Schema<IPet>(
     imageUrl: { type: String },
     imageFileId: { type: String },
     microchipId: { type: String },
+    microchipNumber: { type: String },
+    passportNumber: { type: String },
     isLost: { type: Boolean, default: false },
     isAdoptable: { type: Boolean, default: false },
     verificationStatus: {
       type: String,
-      enum: ['unverified', 'verified'],
+      enum: ['unverified', 'pending', 'verified', 'rejected'],
       default: 'unverified',
     },
     verifiedBy: { type: String },
+    verifiedByName: { type: String },
+    verifiedClinicId: { type: String },
+    verifiedClinicName: { type: String },
     verifiedAt: { type: Date },
+    verificationNote: { type: String },
     publicQrId: {
       type: String,
       required: true,
@@ -72,6 +85,9 @@ const PetSchema = new Schema<IPet>(
   },
   { timestamps: true },
 );
+
+PetSchema.index({ microchipId: 1 });
+PetSchema.index({ microchipNumber: 1 });
 
 PetSchema.pre('validate', function setDefaultPublicQrId() {
   if (!this.publicQrId) {
