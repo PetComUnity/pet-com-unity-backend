@@ -65,12 +65,14 @@ export function makePetPayload(
     location: string;
     gender: 'male' | 'female' | 'unknown';
     birthDate: string;
+    dateOfBirth: string;
     color: string;
     themeColor: string;
     description: string;
     imageUrl: string;
     imageFileId: string;
     microchipId: string;
+    passportNumber: string;
     isAdoptable: boolean;
     isLost: boolean;
     publicQrId: string;
@@ -88,6 +90,9 @@ export function makePetPayload(
     ...(overrides.birthDate !== undefined
       ? { birthDate: overrides.birthDate }
       : {}),
+    ...(overrides.dateOfBirth !== undefined
+      ? { dateOfBirth: overrides.dateOfBirth }
+      : {}),
     ...(overrides.color !== undefined ? { color: overrides.color } : {}),
     ...(overrides.themeColor !== undefined
       ? { themeColor: overrides.themeColor }
@@ -104,6 +109,9 @@ export function makePetPayload(
     ...(overrides.microchipId !== undefined
       ? { microchipId: overrides.microchipId }
       : {}),
+    ...(overrides.passportNumber !== undefined
+      ? { passportNumber: overrides.passportNumber }
+      : {}),
     ...(overrides.publicQrId !== undefined
       ? { publicQrId: overrides.publicQrId }
       : {}),
@@ -113,7 +121,7 @@ export function makePetPayload(
 export async function createTestPet(
   ownerId: string,
   overrides: Partial<ReturnType<typeof makePetPayload>> & {
-    verificationStatus?: 'unverified' | 'verified';
+    verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   } = {},
 ) {
   const payload = makePetPayload(overrides);

@@ -10,15 +10,23 @@ import {
 import { assertCanAccessOwnedResource } from '../utils/access-control';
 import { createAppError } from '../utils/api-response';
 import { deleteCloudinaryAsset } from '../utils/cloudinary';
-import {
-  generatePublicQrId,
-  isValidPublicQrId,
-} from '../utils/public-qr-id';
+import { generatePublicQrId, isValidPublicQrId } from '../utils/public-qr-id';
 import { toPublicPetProfile } from '../utils/pet-serializer';
 
 const PUBLIC_PROFILE_NOT_FOUND_MESSAGE = 'Public pet profile not found.';
 const DUPLICATE_PUBLIC_QR_ID_MESSAGE = 'Public QR ID already exists';
 const MAX_PUBLIC_QR_ID_GENERATION_ATTEMPTS = 5;
+const VERIFIED_IDENTITY_CHANGED_NOTE =
+  'Identity fields changed after verification; verification reset to pending.';
+const CRITICAL_IDENTITY_FIELDS = [
+  'microchipId',
+  'passportNumber',
+  'species',
+  'breed',
+  'gender',
+  'birthDate',
+  'dateOfBirth',
+] as const;
 
 function isDuplicatePublicQrIdError(error: unknown): boolean {
   if (!error || typeof error !== 'object') {
@@ -39,6 +47,41 @@ function isDuplicatePublicQrIdError(error: unknown): boolean {
         'publicQrId',
       ))
   );
+}
+
+function getExistingIdentityValue(pet: Pet, field: string): unknown {
+  if (field === 'birthDate' || field === 'dateOfBirth') {
+    return pet.dateOfBirth ?? pet.birthDate;
+  }
+
+  return pet[field as keyof Pet];
+}
+
+function getPayloadIdentityValue(
+  payload: UpdatePetInput,
+  field: string,
+): unknown {
+  if (field === 'birthDate' || field === 'dateOfBirth') {
+    return payload.dateOfBirth ?? payload.birthDate;
+  }
+
+  return payload[field as keyof UpdatePetInput];
+}
+
+function hasCriticalIdentityChange(
+  existing: Pet,
+  payload: UpdatePetInput,
+): boolean {
+  return CRITICAL_IDENTITY_FIELDS.some((field) => {
+    if (!(field in payload)) {
+      return false;
+    }
+
+    return (
+      getPayloadIdentityValue(payload, field) !==
+      getExistingIdentityValue(existing, field)
+    );
+  });
 }
 
 class PetsService {
@@ -84,8 +127,7 @@ class PetsService {
       : MAX_PUBLIC_QR_ID_GENERATION_ATTEMPTS;
 
     for (let attempt = 0; attempt < attempts; attempt += 1) {
-      const publicQrId =
-        payload.publicQrId ?? generatePublicQrId(payload.name);
+      const publicQrId = payload.publicQrId ?? generatePublicQrId(payload.name);
 
       const existing = await petsRepository.findByPublicQrId(publicQrId);
       if (existing) {
@@ -140,9 +182,25 @@ class PetsService {
       }
     }
 
+    const updatePayload: UpdatePetInput = { ...payload };
+    if (
+      existing.verificationStatus === 'verified' &&
+      hasCriticalIdentityChange(existing, payload)
+    ) {
+      Object.assign(updatePayload, {
+        verificationStatus: 'pending',
+        verifiedBy: null,
+        verifiedByName: null,
+        verifiedClinicId: null,
+        verifiedClinicName: null,
+        verifiedAt: null,
+        verificationNote: VERIFIED_IDENTITY_CHANGED_NOTE,
+      });
+    }
+
     let pet: Pet | undefined;
     try {
-      pet = await petsRepository.update(id, payload);
+      pet = await petsRepository.update(id, updatePayload);
     } catch (error) {
       if (isDuplicatePublicQrIdError(error)) {
         throw createAppError(DUPLICATE_PUBLIC_QR_ID_MESSAGE, 409);
@@ -157,7 +215,10 @@ class PetsService {
 
     const imageIsChanging = 'imageFileId' in payload || 'imageUrl' in payload;
     if (imageIsChanging) {
-      if (existing.imageFileId && existing.imageFileId !== payload.imageFileId) {
+      if (
+        existing.imageFileId &&
+        existing.imageFileId !== payload.imageFileId
+      ) {
         void deleteCloudinaryAsset(existing.imageFileId);
       }
       if (existing.imageUrl && existing.imageUrl !== payload.imageUrl) {

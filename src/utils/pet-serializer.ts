@@ -7,7 +7,7 @@ const PRIVATE_IMAGE_PATH_MARKERS = [
   '/user-avatars/private/',
 ];
 
-function isPublicSafeImageUrl(imageUrl: string): boolean {
+export function isPublicSafeImageUrl(imageUrl: string): boolean {
   try {
     const url = new URL(imageUrl);
 

@@ -9,8 +9,37 @@ import {
 import { buildPetQuery } from '../utils/pet-filters';
 
 function toPet(doc: any): Pet {
-  const { _id, __v, ...rest } = doc;
-  return { ...rest, id: _id.toString() };
+  const { _id, __v, microchipNumber, ...rest } = doc;
+  const microchipId = rest.microchipId ?? microchipNumber;
+  const birthDate = rest.birthDate ?? rest.dateOfBirth;
+  const dateOfBirth = rest.dateOfBirth ?? rest.birthDate;
+
+  return {
+    ...rest,
+    microchipId,
+    birthDate,
+    dateOfBirth,
+    id: _id.toString(),
+  };
+}
+
+function normalizePetIdentityPayload(
+  payload: Record<string, unknown>,
+): Record<string, unknown> {
+  const normalized: Record<string, unknown> = { ...payload };
+  const microchipId = normalized.microchipId ?? normalized.microchipNumber;
+  const dateOfBirth = normalized.dateOfBirth ?? normalized.birthDate;
+
+  if (microchipId !== undefined) {
+    normalized.microchipId = microchipId;
+  }
+
+  if (dateOfBirth !== undefined) {
+    normalized.dateOfBirth = dateOfBirth;
+    normalized.birthDate = dateOfBirth;
+  }
+
+  return normalized;
 }
 
 class PetsRepository {
@@ -74,8 +103,11 @@ class PetsRepository {
   }
 
   async create(payload: CreatePetInput): Promise<Pet> {
+    const normalizedPayload = normalizePetIdentityPayload(
+      payload as unknown as Record<string, unknown>,
+    );
     const pet = await PetModel.create({
-      ...payload,
+      ...normalizedPayload,
       isLost: payload.isLost ?? false,
       isAdoptable: payload.isAdoptable ?? false,
       verificationStatus: 'unverified',
@@ -84,7 +116,10 @@ class PetsRepository {
   }
 
   async update(id: string, payload: UpdatePetInput): Promise<Pet | undefined> {
-    const pet = await PetModel.findByIdAndUpdate(id, payload, {
+    const normalizedPayload = normalizePetIdentityPayload(
+      payload as unknown as Record<string, unknown>,
+    );
+    const pet = await PetModel.findByIdAndUpdate(id, normalizedPayload, {
       returnDocument: 'after',
       runValidators: true,
     }).lean();
