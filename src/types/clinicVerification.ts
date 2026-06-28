@@ -10,6 +10,7 @@ export interface PetVerificationLookup {
   gender?: PetGender;
   dateOfBirth?: string;
   imageUrl?: string;
+  pictureUrl?: string;
   microchipId: string;
   passportNumber?: string;
   verificationStatus: PetVerificationStatus;

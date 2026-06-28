@@ -7,11 +7,22 @@ import type {
 } from '../types/clinicVerification';
 import type { Pet } from '../types/pet';
 import { createAppError } from '../utils/api-response';
-import { isPublicSafeImageUrl } from '../utils/pet-serializer';
 import type { SubmitPetVerificationInput } from '../validation/clinicVerification.schema';
 
 function getPetMicrochipId(pet: Pet): string | undefined {
   return pet.microchipId;
+}
+
+function buildPetPictureUrl(pet: Pet): string | undefined {
+  if (pet.imageUrl) {
+    return pet.imageUrl;
+  }
+
+  if (pet.imageFileId) {
+    return `/api/files/${pet.imageFileId.replace(/\//g, '--')}`;
+  }
+
+  return undefined;
 }
 
 function toVerificationLookup(pet: Pet): PetVerificationLookup {
@@ -28,8 +39,10 @@ function toVerificationLookup(pet: Pet): PetVerificationLookup {
   if (pet.dateOfBirth ?? pet.birthDate) {
     lookup.dateOfBirth = pet.dateOfBirth ?? pet.birthDate;
   }
-  if (pet.imageUrl && isPublicSafeImageUrl(pet.imageUrl)) {
-    lookup.imageUrl = pet.imageUrl;
+  const pictureUrl = buildPetPictureUrl(pet);
+  if (pictureUrl) {
+    lookup.imageUrl = pictureUrl;
+    lookup.pictureUrl = pictureUrl;
   }
   if (pet.passportNumber !== undefined) {
     lookup.passportNumber = pet.passportNumber;

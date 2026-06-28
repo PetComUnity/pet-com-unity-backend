@@ -19,6 +19,7 @@ export const lookupPetByMicrochip = asyncHandler(
       result.data.microchipId,
     );
 
+    res.set('Cache-Control', 'no-store');
     sendSuccess(res, 200, 'Pet verification lookup loaded', pet);
   },
 );

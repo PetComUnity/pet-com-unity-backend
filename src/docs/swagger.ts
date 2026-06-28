@@ -104,6 +104,7 @@ const options: swaggerJsdoc.Options = {
             },
             dateOfBirth: { type: 'string', nullable: true },
             imageUrl: { type: 'string', nullable: true },
+            pictureUrl: { type: 'string', nullable: true },
             microchipId: { type: 'string' },
             passportNumber: { type: 'string', nullable: true },
             verificationStatus: {

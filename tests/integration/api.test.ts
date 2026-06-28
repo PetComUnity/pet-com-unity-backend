@@ -443,6 +443,7 @@ describe('clinic pet verification API', () => {
       gender: 'female',
       dateOfBirth: '2022-04-12',
       imageUrl: 'https://images.example.com/pet.jpg',
+      pictureUrl: 'https://images.example.com/pet.jpg',
       microchipId: '123456789',
       passportNumber: 'MK-PASS-1',
       verificationStatus: 'unverified',
@@ -639,8 +640,34 @@ describe('clinic pet verification API', () => {
     ]) {
       expect(response.body.data).not.toHaveProperty(field);
     }
-    expect(response.body.data).not.toHaveProperty('imageUrl');
-    expect(JSON.stringify(response.body.data)).not.toContain('private-file');
+    expect(response.body.data).toMatchObject({
+      imageUrl:
+        'https://res.cloudinary.com/test-cloud/image/upload/v1/pet-avatars/private/private-file.jpg',
+      pictureUrl:
+        'https://res.cloudinary.com/test-cloud/image/upload/v1/pet-avatars/private/private-file.jpg',
+    });
+    expect(response.body.data).not.toHaveProperty('imageFileId');
+  });
+
+  it('returns a protected picture URL when lookup pet has only an image file ID', async () => {
+    const owner = await createTestUser();
+    const vet = await createTestUser({ role: 'vet' });
+    await createTestPet(owner.user.id, {
+      name: 'File Only Pet',
+      microchipId: 'file-only-chip',
+      imageFileId: 'pet-avatars/private/file-only',
+    });
+
+    const response = await request(app)
+      .get('/api/clinics/pets/lookup?microchipId=file-only-chip')
+      .set('Authorization', authHeader(vet.token));
+
+    expect(response.status).toBe(200);
+    expect(response.headers['cache-control']).toBe('no-store');
+    expect(response.body.data).toMatchObject({
+      imageUrl: '/api/files/pet-avatars--private--file-only',
+      pictureUrl: '/api/files/pet-avatars--private--file-only',
+    });
   });
 
   it('returns verification history for a pet', async () => {
