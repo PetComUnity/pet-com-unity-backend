@@ -178,7 +178,7 @@ class ClinicVerificationService {
     }
 
     return {
-      pet: toVerificationSummary(updatedPet),
+      pet: toVerificationLookup(updatedPet),
       verificationRecord,
     };
   }

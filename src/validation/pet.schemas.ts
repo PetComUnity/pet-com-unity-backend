@@ -24,7 +24,7 @@ export const createPetSchema = z.object({
   themeColor: z.string().optional(),
   description: z.string().optional(),
   imageUrl: z.string().url('Invalid image URL').optional(),
-  imageFileId: z.string().optional(),
+  imageFileId: z.string().nullable().optional(),
   microchipId: z.string().optional(),
   passportNumber: z.string().optional(),
   isLost: z.boolean().optional(),
