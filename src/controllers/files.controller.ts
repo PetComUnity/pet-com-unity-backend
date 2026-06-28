@@ -113,14 +113,12 @@ export const getPrivateFileController = asyncHandler(
       return;
     }
 
-    const [pet, user] = await Promise.all([
+    const [pet, avatarUser] = await Promise.all([
       PetModel.findOne({ imageFileId: publicId }).lean(),
-      userId
-        ? UserModel.findOne({ _id: userId, avatarFileId: publicId }).lean()
-        : Promise.resolve(null),
+      UserModel.findOne({ avatarFileId: publicId }).lean(),
     ]);
 
-    if (!pet && !user) {
+    if (!pet && !avatarUser) {
       res.status(404).json({ success: false, message: 'File not found' });
       return;
     }
@@ -129,11 +127,12 @@ export const getPrivateFileController = asyncHandler(
       const isPublicPet = pet.isAdoptable || pet.isLost;
       const isOwner = userId && pet.ownerId === userId;
       const isClinicVerifier = req.role === 'vet' || req.role === 'admin';
-      if (!isPublicPet && !isOwner && !isClinicVerifier && !user) {
+      if (!isPublicPet && !isOwner && !isClinicVerifier && !avatarUser) {
         res.status(403).json({ success: false, message: 'Access denied' });
         return;
       }
     } else if (!userId) {
+      // user avatars are accessible to any authenticated user
       res
         .status(401)
         .json({ success: false, message: 'Authentication required' });

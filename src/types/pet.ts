@@ -6,9 +6,20 @@ export type PetVerificationStatus =
   | 'rejected';
 export type PetSize = 'S' | 'M' | 'L';
 
+export interface PetOwnerInfo {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  city?: string;
+  avatarFileId?: string;
+}
+
 export interface Pet {
   id: string;
   ownerId: string;
+  owner?: PetOwnerInfo;
   name: string;
   species: string;
   breed?: string;
