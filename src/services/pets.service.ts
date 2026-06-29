@@ -1,4 +1,5 @@
 import { petsRepository } from '../repositories/pets.repository';
+import { usersRepository } from '../repositories/users.repository';
 import {
   CreatePetInput,
   PaginatedPets,
@@ -101,6 +102,19 @@ class PetsService {
 
     if (!pet) {
       throw createAppError('Pet not found', 404);
+    }
+
+    const owner = await usersRepository.getById(pet.ownerId).catch(() => undefined);
+    if (owner) {
+      pet.owner = {
+        id: owner.id,
+        name: owner.name,
+        email: owner.email,
+        role: owner.role,
+        phone: owner.phone,
+        city: owner.city,
+        avatarFileId: owner.avatarFileId,
+      };
     }
 
     return pet;
